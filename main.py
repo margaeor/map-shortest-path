@@ -78,11 +78,12 @@ def is_inside2(x1, y1, x2, y2, x3, y3, x, y):
 
 
 class DualGraph:
-    def __init__(self,points):
+    def __init__(self,points,mask=None):
         self.adj = defaultdict(set)
         self.P = points
         self.mtrig = mtri.Triangulation(points[:,0], points[:,1])
-        self.trigs = self.mtrig.triangles
+        self.trigs = self.mtrig.triangles[~mask.astype(bool),:] if mask is not None else self.mtrig.triangles
+        print('len',len(self.trigs))
         self.edges = defaultdict(list)
 
         for i, trig in enumerate(self.trigs):
@@ -215,14 +216,14 @@ class PathFinder:
             eb = dg.get_trig_edges(b)
 
             e = list(set(ea) & set(eb))[0]
-            plt.plot([dg.P[e[0]][0],dg.P[e[1]][0]], [dg.P[e[0]][1],dg.P[e[1]][1]],'r-')
+            #plt.plot([dg.P[e[0]][0],dg.P[e[1]][0]], [dg.P[e[0]][1],dg.P[e[1]][1]],'r-')
             path_edges.append(e)
 
         return path_edges
 
 
     def ccw(self,a,b,c):
-        return np.dot(b-a,c-a) > 0
+        return np.cross(b-a,c-a) > 0
         #return
 
     def find_triangle_path(self,p,q):
@@ -237,57 +238,101 @@ class PathFinder:
             left = []
             right = []
 
+            last_edge_l = None
+            last_edge_r = None
+            print(edge_path)
             for e in edge_path:
                 p1,p2 = dg.P[e[0]],dg.P[e[1]]
                 p1_id,p2_id = e[0],e[1]
 
-                if self.ccw(tail[-1],p1,p2):
+                prev_center = tail[-1] if last_edge_l is None or last_edge_r is None else (last_edge_r+last_edge_l)/2
+                #print('Prev center:',prev_center)
+                if self.ccw(prev_center,p1,p2):
                     p1,p2 = p2,p1
                     p1_id,p2_id = p2_id,p1_id
+
 
                 if len(left) == 0:
                     left.append(p1_id)
                 elif left[-1] != p1_id and self.ccw(tail[-1], p1, dg.P[left[-1]]):
-                    left[-1] = p1_id
+                    if self.ccw(tail[-1],dg.P[right[-1]], p1):
+                        print("OK situation left",p1)
+                        left[-1] = p1_id
+                    else:
+                        print("Weird situation left")
+                        # change the appex
+                        left[-1] = p1_id
+                        tail.append(dg.P[right.pop()])
                 else:
-                    left.append(p1_id)
+                    print("Not preceeding left",p1)
 
                 if len(right) == 0:
                     right.append(p2_id)
                 elif right[-1] != p2_id and self.ccw(tail[-1], dg.P[right[-1]], p2):
-                    right[-1] = p2_id
+                    if self.ccw(tail[-1], p2, dg.P[left[-1]]):
+                        print("OK situation right",p2)
+                        right[-1] = p2_id
+                    else:
+                        print("Weird situation right")
+                        # change the appex
+                        right[-1] = p2_id
+                        #left[-1] = p1_id
+                        tail.append(dg.P[left.pop()])
                 else:
-                    right.append(p2_id)
+                    print("Not preceeding right",p2)
 
-                # if len(right) == 0:
-                #     right.append(v2 + tail[-1])
-                #
-                # elif self.ccw(v2,right[-1]):
-                #     right.append(v2 + tail[-1])
+                #print('(l1,r1,a)=', dg.P[left[-1]],dg.P[right[-1]],tail[-1])
+                last_edge_l = p1
+                last_edge_r = p2
+
+            tail.append(q)
+            return np.array(tail)
 
 
 #coords = np.array([[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]])
-coords = np.random.rand(10,2)
+#coords = np.random.rand(10,2)
+coords = np.array(
+[[8.30000000000001, -3.78000000000000],
+ [7.14000000000001, -7.70000000000001],
+ [13.7600000000000, -5.64000000000001],
+ [11.3800000000000, -10.7600000000000],
+ [16.6000000000000, -9.98000000000001],
+ [21.2600000000000, -7.84000000000001],
+ [21.7400000000000, -3.66000000000000],
+ [15.4400000000000, -1.22000000000000],
+ [16.8200000000000, 2.02000000000000],
+ [21.5800000000000, 0.880000000000001],
+ [11.0000000000000, 3.00000000000000],
+ [9.30000000000001, 0.280000000000000],
+ [7.36615871821730, 5.55833384277120],
+ [11.7558194162222, 8.74204379956599],
+ [10.0000000000000, 12.0000000000000],
+ [17.4479069147342, 13.4211326754614],
+ [18.9915238634832, 8.23554448825773],
+ [23.9841599320932, 11.6363255784704]]
+)
+mask = 1-np.array([1,1,0,0,1,1,0,0,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,0,0,0])
 
-dg = DualGraph(coords)
+dg = DualGraph(coords,mask)
 pf = PathFinder(dg)
 
 
 print("Calculating")
-p = (0.33, 0.33)
-q = (0.55, 0.55)
-
-
-
-
-
+#p = (0.33, 0.33)
+#q = (0.55, 0.55)
+p = (8.7,-5.7)
+q = (20,11)
+#p = (20,-6)
+#q = (20,11)
 
 
 
 x = coords[:,0]
 y = coords[:,1]
 
-triang = mtri.Triangulation(x, y)
+
+
+triang = mtri.Triangulation(x, y, mask=mask)
 
 Cpoints = x + 0.5*y
 
@@ -295,15 +340,18 @@ xmid = x[triang.triangles].mean(axis=1)
 ymid = y[triang.triangles].mean(axis=1)
 Cfaces = 0.5*xmid + ymid#0.66*np.ones(shape=(triang.triangles.shape[0]))#
 
-
+print(len(triang.triangles))
 
 plt.tripcolor(triang, facecolors=Cfaces, edgecolors='k')
-plt.plot([p[0],q[0]],[p[1],q[1]],'ro')
+#plt.plot([p[0],q[0]],[p[1],q[1]],'ro')
 plt.title('facecolors')
 
 
-pf.find_triangle_path(p,q)
+points = pf.find_triangle_path(p,q)
 
+if points is not None:
+    plt.plot(points[:,0],points[:,1],'r--')
+    plt.plot(points[:,0],points[:,1],'ro')
 
 for i in range(len(dg.trigs)):
     t = np.array(dg.triangle_id_to_coords(i))
@@ -313,7 +361,7 @@ for i in range(len(dg.trigs)):
 #print(coords)
 #print(dg.trigs)
 #print(dict(dg.adj))
-
+print(pf.ccw(np.array([0,0]),np.array([1,1]),np.array([1,0])))
 
 
 
