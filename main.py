@@ -4,6 +4,7 @@ from  matplotlib import tri as mtri
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from functools import lru_cache
+import itertools
 
 TOLERANCE = 0.0001
 
@@ -79,16 +80,17 @@ class DualGraph:
         self.P = points
         self.mtrig = mtri.Triangulation(points[:,0], points[:,1])
         self.trigs = self.mtrig.triangles
+        self.edges = defaultdict(list)
 
-        d = defaultdict(set)
 
         for i, trig in enumerate(self.trigs):
-            for t1 in trig:
-                d[t1].add(i)
+            for subset in itertools.combinations(trig, 2):
+                self.edges[tuple(sorted(subset))].append(i)
 
-        for key, value in d.items():
+        for key, value in self.edges.items():
             value = list(value)
             for i in range(len(value)):
+
                 for j in range(i + 1, len(value)):
                     self.add_edge(value[i], value[j])
 
