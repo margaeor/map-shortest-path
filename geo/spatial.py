@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.spatial as sp
+from  matplotlib import tri as mtri
 #from p2t import CDT
+
 
 from . import shapes as shapes
 
@@ -10,17 +12,28 @@ def toNumpy(points):
 
 
 def triangulatePolygon(poly, hole=None):
-    # Triangulate poly with hole
-    cdt = CDT(poly.points)
+
+    x = np.array([0] * poly.n, np.float32)
+    y = np.array([0] * poly.n, np.float32)
+
+    for i,p in enumerate(poly.points):
+        x[i] = p.x
+        y[i] = p.y
+
     if hole:
-        cdt.add_hole(hole)
-    triangles = cdt.triangulate()
+        print("SHIT")
+    # Triangulate poly with hole
+    triangles = mtri.Triangulation(x,y)
+    # cdt = CDT(poly.points)
+    # if hole:
+    #     cdt.add_hole(hole)
+    #triangles = cdt.triangulate()
 
     # Frustratingly, CDT sometimes returns points that are not
     # EXACTLY the same as the input points, so we use a KDTree
     valid_points = [shapes.Point(p.x, p.y) for p in poly.points]
-    if hole:
-        valid_points += [shapes.Point(p.x, p.y) for p in hole]
+    #if hole:
+    #    valid_points += [shapes.Point(p.x, p.y) for p in hole]
     tree = sp.KDTree(toNumpy(valid_points))
 
     def convert(t):
@@ -31,7 +44,16 @@ def triangulatePolygon(poly, hole=None):
         B = findClosest(shapes.Point(t.b.x, t.b.y))
         C = findClosest(shapes.Point(t.c.x, t.c.y))
         return shapes.Triangle(A, B, C)
-    return list(map(convert, triangles))
+
+
+    trig_list = []
+
+    for i in range(triangles.triangles.shape[0]):
+        trig = triangles.triangles[i]
+        tri_points = [poly.points[j] for j in trig]
+        trig_list.append(shapes.Triangle(*tri_points))
+
+    return trig_list
 
 
 def triangulatePoints(points):
