@@ -1,0 +1,39 @@
+Metadata-Version: 1.0
+Name: poly2tri
+Version: 0.3.3
+Summary: A 2D constrained Delaunay triangulation library
+Home-page: http://code.google.com/p/poly2tri/
+Author: Mason Green
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: ﻿==================
+        INSTALLATION GUIDE
+        ==================
+        
+        ------------
+        Dependencies
+        ------------
+        
+          Core poly2tri lib:
+          - Cython
+          
+          Testbed:
+          - Pygame
+        
+        ----------------------------------------------
+        Building the library
+        ----------------------------------------------
+        
+        python setup.py build_ext -i
+        
+        ----------------------------------------------
+        Running the Examples
+        ----------------------------------------------
+        
+        python test.py <filename> <translate-x> <translate-y> <zoom>
+        
+        Examples:
+        
+          python test.py data/dude.dat 100 -200 1
+          python test.py data/nazca_monkey.dat 400 300 4.5
+Platform: UNKNOWN

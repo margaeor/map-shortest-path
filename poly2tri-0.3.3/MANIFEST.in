@@ -1,0 +1,3 @@
+recursive-include package *
+recursive-include src *
+recursive-include poly2tri *
