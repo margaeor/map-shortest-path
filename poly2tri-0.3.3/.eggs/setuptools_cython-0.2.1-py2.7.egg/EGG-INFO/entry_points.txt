@@ -1,6 +1,0 @@
-[distutils.commands]
-
-
-[distutils.setup_keywords]
-ext_modules = setuptools_cython:ext_modules_hack
-
