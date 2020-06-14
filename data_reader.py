@@ -40,19 +40,19 @@ ANIMATE = True
 rp = polygons[:1]#reversed(polygons)
 
 
-def runLocator(regions):
+def runLocator(regions,outline,point_to_id):
     # Pre-process regions
-    l = Locator(regions)
+    l = Locator(regions,outline=outline)
 
     if ANIMATE:
-        show(regions)
-        plot(l.boundary, style='g--')
-        show(regions)
+       show(regions)
+       plot(l.boundary, style='g--')
+       show(regions)
 
 
     n = 50
     # Ensure correctness
-    for region in regions:
+    for region in reversed(regions):
         # Test n random interior points per region
         for k in range(n):
             target = region.smartInteriorPoint()
@@ -79,6 +79,8 @@ def runLocator(regions):
 
 def create_kirkpatrick(point_dict,triangulation):
 
+    converted_points = [Point(p[0],p[1]) for p in point_dict]
+    point_to_id = {Point(p[0],p[1]):i for i,p in enumerate(point_dict)}
     triangulation = [Point(*point_dict[t]) for t in triangulation]
 
     triangles = [Triangle(*[triangulation[i+j] for j in range(3)])
@@ -108,11 +110,11 @@ def create_kirkpatrick(point_dict,triangulation):
         y = [t.points[0].y, t.points[1].y, t.points[2].y,t.points[0].y]
 
         lst.append([[t.points[0].x,t.points[0].y],[t.points[1].x,t.points[1].y],[t.points[2].x,t.points[2].y]])
-        plt.plot(x, y)
+        #plt.plot(x, y)
 
-
+    outline = Polygon(converted_points)
     #plt.show()
-    runLocator(triangles)
+    runLocator(triangles,outline,point_to_id)
 
 
 

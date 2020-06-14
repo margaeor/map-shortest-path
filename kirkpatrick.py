@@ -2,6 +2,18 @@ from geo import shapes, spatial
 import min_triangle
 from graph import UndirectedGraph, DirectedGraph
 from functools import reduce
+import matplotlib.pyplot as plt
+
+def plot_triangles(triangles):
+    #plt.figure()
+    for t in triangles:
+
+        x = [t.points[0].x,t.points[1].x,t.points[2].x,t.points[0].x]
+        y = [t.points[0].y, t.points[1].y, t.points[2].y,t.points[0].y]
+
+        plt.plot(x, y)
+
+    plt.show()
 
 class Locator(object):
 
@@ -35,6 +47,8 @@ class Locator(object):
                 bounding_tri = min_triangle.boundingTriangle(poly.points)
                 bounding_regions = spatial.triangulatePolygon(
                     bounding_tri, hole=poly.points)
+
+                #plot_triangles(bounding_regions)
                 return bounding_tri, bounding_regions
 
             if not outline:

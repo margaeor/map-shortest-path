@@ -19,17 +19,18 @@ def triangulatePolygon(poly, hole=None):
     y = np.array([0] * poly.n, np.float32)
 
     points = []
-    point_list = poly.points+hole
+    point_list = poly.points
     for i,p in enumerate(poly.points):
         x[i] = p.x
         y[i] = p.y
         points.append(p.x)
         points.append(p.y)
 
-    hole_idx = None
+    hole_param = None
 
     if hole:
-        hole_idx = len(points)//2
+        point_list = point_list+hole
+        hole_param = [len(points)//2]
         for p in hole:
             points.append(p.x)
             points.append(p.y)
@@ -37,7 +38,7 @@ def triangulatePolygon(poly, hole=None):
         #print("SHIT")
     # Triangulate poly with hole
     #triangles = mtri.Triangulation(x,y)
-    triangles = earcut(points,hole_idx,2)
+    triangles = earcut(points,hole_param,2)
 
     # cdt = CDT(poly.points)
     # if hole:
