@@ -107,7 +107,8 @@ class Locator(object):
 
             # Avoid adding points from outer triangle
             removal = g.independent_set(8, avoid=bounding_triangle.points)
-
+            #rms = [len(points_to_regions[r]) for r in removal]
+            #print(rms)
             # Track unaffected regions
             unaffected_regions = set([i for i in range(len(regions))])
             new_regions = []

@@ -1,0 +1,3 @@
+kirkpatrick.py -> ln 36, ln 121
+look at triangulation (should it be delaunay?)
+problem: boundary is degenerate (2 points) -> stems from not enough edges in calculate bounding polygon.

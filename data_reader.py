@@ -110,8 +110,6 @@ def create_kirkpatrick(point_dict,triangulation):
         lst.append([[t.points[0].x,t.points[0].y],[t.points[1].x,t.points[1].y],[t.points[2].x,t.points[2].y]])
         plt.plot(x, y)
 
-    with open('shit.json', 'w') as outfile:
-        json.dump(lst, outfile)
 
     #plt.show()
     runLocator(triangles)
