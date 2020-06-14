@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.spatial as sp
+from triangulator import earcut
 from  matplotlib import tri as mtri
+from copy import deepcopy
 #from p2t import CDT
 
 
@@ -16,14 +18,27 @@ def triangulatePolygon(poly, hole=None):
     x = np.array([0] * poly.n, np.float32)
     y = np.array([0] * poly.n, np.float32)
 
+    points = []
+    point_list = poly.points+hole
     for i,p in enumerate(poly.points):
         x[i] = p.x
         y[i] = p.y
+        points.append(p.x)
+        points.append(p.y)
+
+    hole_idx = None
 
     if hole:
-        print("SHIT")
+        hole_idx = len(points)//2
+        for p in hole:
+            points.append(p.x)
+            points.append(p.y)
+
+        #print("SHIT")
     # Triangulate poly with hole
-    triangles = mtri.Triangulation(x,y)
+    #triangles = mtri.Triangulation(x,y)
+    triangles = earcut(points,hole_idx,2)
+
     # cdt = CDT(poly.points)
     # if hole:
     #     cdt.add_hole(hole)
@@ -36,24 +51,30 @@ def triangulatePolygon(poly, hole=None):
     #    valid_points += [shapes.Point(p.x, p.y) for p in hole]
     tree = sp.KDTree(toNumpy(valid_points))
 
-    def convert(t):
-        def findClosest(point):
-            idx = tree.query(toNumpy([point]))[1]
-            return valid_points[idx]
-        A = findClosest(shapes.Point(t.a.x, t.a.y))
-        B = findClosest(shapes.Point(t.b.x, t.b.y))
-        C = findClosest(shapes.Point(t.c.x, t.c.y))
-        return shapes.Triangle(A, B, C)
+    # def convert(t):
+    #     def findClosest(point):
+    #         idx = tree.query(toNumpy([point]))[1]
+    #         return valid_points[idx]
+    #     A = findClosest(shapes.Point(t.a.x, t.a.y))
+    #     B = findClosest(shapes.Point(t.b.x, t.b.y))
+    #     C = findClosest(shapes.Point(t.c.x, t.c.y))
+    #     return shapes.Triangle(A, B, C)
 
 
-    trig_list = []
+    # trig_list = []
+    #
+    # for i in range(triangles.triangles.shape[0]):
+    #     trig = triangles.triangles[i]
+    #     tri_points = [poly.points[j] for j in trig]
+    #     trig_list.append(shapes.Triangle(*tri_points))
 
-    for i in range(triangles.triangles.shape[0]):
-        trig = triangles.triangles[i]
-        tri_points = [poly.points[j] for j in trig]
-        trig_list.append(shapes.Triangle(*tri_points))
 
-    return trig_list
+    triangulation = [point_list[t] for t in triangles]
+
+    triangles = [shapes.Triangle(*[triangulation[i+j] for j in range(3)])
+                for i in range(0,len(triangulation),3)]
+
+    return triangles
 
 
 def triangulatePoints(points):
