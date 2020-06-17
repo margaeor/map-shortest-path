@@ -280,6 +280,23 @@ class PointLocator:
             else:
                 return None
 
+    def click_event(self,event):
+
+        print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+              (event.button, event.x, event.y, event.xdata, event.ydata))
+
+        #l = self.locate()
+        plt.plot(event.xdata, event.ydata,markerfacecolor="red", marker=".", markersize=20)
+        self.fig.canvas.draw()
+
+    def start_gui(self):
+
+        self.fig = plt.figure()
+        plot(self.polygons)
+
+        cid = self.fig.canvas.mpl_connect('button_press_event', self.click_event)
+        plt.show()
+
 
 
 '''
@@ -351,7 +368,9 @@ for i,p in enumerate(rp):
     # t.append(trig)
     # print(f"Finished {i}")
 
-point_locator.plot()
+
+
+point_locator.start_gui()
 
 # with open('data.json', 'w') as outfile:
 #     json.dump(flattened, outfile)
