@@ -5,7 +5,7 @@ from itertools import combinations
 import matplotlib.pyplot as plt
 
 import constants
-from geo.drawer import plot
+from geo.drawer import plot,plotPoints
 from geo.shapes import Point, Polygon, Triangle
 from graph import UndirectedGraph
 from point_location.kirkpatrick import Locator
@@ -194,6 +194,11 @@ class PointLocator:
 
         triangle_path = poly.dual_graph.find_path_between_nodes(sid1,sid2)
 
+        for t in triangle_path:
+
+            trig = poly.triangles[t]
+
+            plot(trig,'b-')
 
         if not triangle_path or len(triangle_path) < 2:
             return []
@@ -209,8 +214,7 @@ class PointLocator:
 
 
 
-        print(triangle_path)
-        print(path_edges)
+        return path_edges
 
 '''
 The kirkpatrick point locator is very efficient

@@ -36,6 +36,9 @@ class Point(object):
     def __rmul__(self, c):
         return Point(c * self.x, c * self.y)
 
+    def __truediv__(self, c):
+        return Point(self.x/c,self.y/c)
+
     def close(self, that, epsilon=0.01):
         return self.dist(that) < epsilon
 

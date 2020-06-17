@@ -2,98 +2,102 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shapefile
 
-from geo.drawer import plot, show, showPoints
+from geo.drawer import plot, plotPoints, show, showPoints
 from geo.shapes import Point, Polygon, Triangle
 from point_location.kirkpatrick import Locator
 from point_location.point_locator import PointLocator, PointLocatorPoly
 
 
+def ccw(A, B, C):
+    """Tests whether the line formed by A, B, and C is ccw"""
+    return (B.x - A.x) * (C.y - A.y) < (B.y - A.y) * (C.x - A.x)
 
-# class PathFinder:
-#     def __init__(self, dg):
-#         self.dg = dg
-#
-#     def convert_trig_path_to_edges(self, path):
-#
-#         if not path or len(path) < 2:
-#             return []
-#
-#         path_edges = []
-#         for a, b in zip(path[:-1], path[1:]):
-#             ea = dg.get_trig_edges(a)
-#             eb = dg.get_trig_edges(b)
-#
-#             e = list(set(ea) & set(eb))[0]
-#             # plt.plot([dg.P[e[0]][0],dg.P[e[1]][0]], [dg.P[e[0]][1],dg.P[e[1]][1]],'r-')
-#             path_edges.append(e)
-#
-#         return path_edges
-#
-#     def ccw(self, a, b, c):
-#         return np.cross(b - a, c - a) > 0
-#         # return
-#
-#     def find_triangle_path(self, p, q):
-#         s = dg.find_triangle_from_point(p)
-#         print('STARTING ID', s)
-#         if s:
-#             path = dg.bfs(s, q)
-#             print(path)
-#             edge_path = self.convert_trig_path_to_edges(path)
-#
-#             tail = [np.array(p)]
-#             left = []
-#             right = []
-#
-#             last_edge_l = None
-#             last_edge_r = None
-#             print(edge_path)
-#             for e in edge_path:
-#                 p1, p2 = dg.P[e[0]], dg.P[e[1]]
-#                 p1_id, p2_id = e[0], e[1]
-#
-#                 prev_center = tail[-1] if last_edge_l is None or last_edge_r is None else (
-#                                                                                           last_edge_r + last_edge_l) / 2
-#                 # print('Prev center:',prev_center)
-#                 if self.ccw(prev_center, p1, p2):
-#                     p1, p2 = p2, p1
-#                     p1_id, p2_id = p2_id, p1_id
-#
-#                 if len(left) == 0:
-#                     left.append(p1_id)
-#                 elif left[-1] != p1_id and self.ccw(tail[-1], p1, dg.P[left[-1]]):
-#                     if self.ccw(tail[-1], dg.P[right[-1]], p1):
-#                         print("OK situation left", p1)
-#                         left[-1] = p1_id
-#                     else:
-#                         print("Weird situation left")
-#                         # change the appex
-#                         left[-1] = p1_id
-#                         tail.append(dg.P[right.pop()])
-#                 else:
-#                     print("Not preceeding left", p1)
-#
-#                 if len(right) == 0:
-#                     right.append(p2_id)
-#                 elif right[-1] != p2_id and self.ccw(tail[-1], dg.P[right[-1]], p2):
-#                     if self.ccw(tail[-1], p2, dg.P[left[-1]]):
-#                         print("OK situation right", p2)
-#                         right[-1] = p2_id
-#                     else:
-#                         print("Weird situation right")
-#                         # change the appex
-#                         right[-1] = p2_id
-#                         # left[-1] = p1_id
-#                         tail.append(dg.P[left.pop()])
-#                 else:
-#                     print("Not preceeding right", p2)
-#
-#                 # print('(l1,r1,a)=', dg.P[left[-1]],dg.P[right[-1]],tail[-1])
-#                 last_edge_l = p1
-#                 last_edge_r = p2
-#
-#             tail.append(q)
-#             return np.array(tail)
+class PathFinder:
+    def __init__(self):
+        pass
+
+
+    def find_path_funnel(self, point_dict , edge_path, p, q):
+
+        tail = [p]
+        left = []
+        right = []
+
+        last_edge_l = None
+        last_edge_r = None
+        for e in edge_path:
+            p1, p2 = point_dict[e[0]], point_dict[e[1]]
+            p1_id, p2_id = e[0], e[1]
+
+            prev_center = tail[-1] if last_edge_l is None or last_edge_r is None else (
+                                                                                      last_edge_r + last_edge_l) / 2
+            # print('Prev center:',prev_center)
+            if ccw(prev_center, p1, p2):
+                p1, p2 = p2, p1
+                p1_id, p2_id = p2_id, p1_id
+
+            if len(left) == 0:
+                left.append(p1_id)
+            elif left[-1] != p1_id and ccw(tail[-1], p1, point_dict[left[-1]]):
+                if ccw(tail[-1], point_dict[right[-1]], p1):
+                    print("OK situation left", p1)
+                    left[-1] = p1_id
+                else:
+                    print("Weird situation left")
+                    # change the appex
+                    left[-1] = p1_id
+                    tail.append(point_dict[right.pop()])
+            else:
+                print("Not preceeding left", p1)
+
+            if len(right) == 0:
+                right.append(p2_id)
+            elif right[-1] != p2_id and ccw(tail[-1], point_dict[right[-1]], p2):
+                if ccw(tail[-1], p2, point_dict[left[-1]]):
+                    print("OK situation right", p2)
+                    right[-1] = p2_id
+                else:
+                    print("Weird situation right")
+                    # change the appex
+                    right[-1] = p2_id
+                    # left[-1] = p1_id
+                    tail.append(point_dict[left.pop()])
+            else:
+                print("Not preceeding right", p2)
+
+            # print('(l1,r1,a)=', dg.P[left[-1]],dg.P[right[-1]],tail[-1])
+            last_edge_l = p1
+            last_edge_r = p2
+
+        tail.append(q)
+        return tail
+
+
+
+class ClickEvent():
+    def __init__(self, fig, func, button=1):
+        self.fig = fig
+        self.ax=fig.axes[0]
+        self.func=func
+        self.button=button
+        self.press=False
+        self.move = False
+
+
+    def onclick(self,event):
+        if event.inaxes == self.fig.axes[0]:
+            if event.button == self.button:
+                self.func(event)
+    def onpress(self,event):
+        self.press=True
+    def onmove(self,event):
+        if self.press:
+            self.move=True
+    def onrelease(self,event):
+        if self.press and not self.move:
+            self.onclick(event)
+        self.press=False; self.move=False
+
 
 
 
@@ -102,9 +106,15 @@ class ProgramDriver:
     def __init__(self, shape_file="./GSHHS_c_L1.shp"):
 
         self.point_locator = PointLocator()
+        self.path_finder = PathFinder()
 
-        # Starting and finishing points
+        # Contain (polygon_id,triangle_id) of the starting
+        # and finishing points
         self.s,self.f = None,None
+
+        # Contain the actual starting and finishing point
+        self.ps,self.pf = None,None
+
 
         with shapefile.Reader(shape_file) as shp:
             shapes = shp.shapes()
@@ -132,17 +142,25 @@ class ProgramDriver:
         else:
             if self.s is None:
                 self.s = l
+                self.ps = p
             elif self.f is None:
                 if l[0] != self.s[0]:
                     print('Points not inside the same polygon. Pick another one')
                     return
                 else:
+                    self.pf = p
                     self.f = l
 
             if self.s is not None and self.f is not None:
                 print('Calculate path: ')
-                self.point_locator.find_edge_path(self.s[0],self.s[1],self.f[1])
+                edge_path = self.point_locator.find_edge_path(self.s[0],self.s[1],self.f[1])
+
+                poly_points = self.point_locator.polygons[self.s[0]].points
+                path = self.path_finder.find_path_funnel(poly_points,edge_path,self.ps,self.pf)
+                print(path)
+                plotPoints(path,'r--')
                 self.s,self.f = None,None
+                self.ps, self.pf = None, None
 
         plt.plot(event.xdata, event.ydata,markerfacecolor="red", marker=".", markersize=20)
         self.fig.canvas.draw()
@@ -153,7 +171,13 @@ class ProgramDriver:
         self.fig = plt.figure()
         plot(self.point_locator.polygons)
 
-        cid = self.fig.canvas.mpl_connect('button_press_event', self.click_event)
+        ce = ClickEvent(self.fig, self.click_event, button=1)
+
+        self.fig.canvas.mpl_connect('button_press_event', ce.onpress)
+        self.fig.canvas.mpl_connect('button_release_event', ce.onrelease)
+        self.fig.canvas.mpl_connect('motion_notify_event', ce.onmove)
+
+        #cid = self.fig.canvas.mpl_connect('button_press_event', self.click_event)
         plt.show()
 
 
