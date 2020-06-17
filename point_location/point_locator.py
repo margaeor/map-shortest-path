@@ -143,6 +143,9 @@ class PointLocatorPoly:
             return None
 
 
+    def get_triangle_edges(self,tid):
+        return tuple(sorted(list(self.id_triangles[tid])))
+
 
 class PointLocator:
 
@@ -181,8 +184,33 @@ class PointLocator:
         return None
 
 
+    # pid is the polygon id and
+    # sid1 and sid2 are the triangle ids between
+    # which we want to find a path
+    def find_edge_path(self,pid,sid1,sid2):
+
+        poly = self.polygons[pid]
+        struct = self.search_structures[pid]
+
+        triangle_path = poly.dual_graph.find_path_between_nodes(sid1,sid2)
 
 
+        if not triangle_path or len(triangle_path) < 2:
+            return []
+
+        path_edges = []
+        for a, b in zip(triangle_path[:-1], triangle_path[1:]):
+            ea = poly.get_triangle_edges(a)
+            eb = poly.get_triangle_edges(b)
+
+            e = list(set(ea) & set(eb))
+            # plt.plot([dg.P[e[0]][0],dg.P[e[1]][0]], [dg.P[e[0]][1],dg.P[e[1]][1]],'r-')
+            path_edges.append(e)
+
+
+
+        print(triangle_path)
+        print(path_edges)
 
 '''
 The kirkpatrick point locator is very efficient
