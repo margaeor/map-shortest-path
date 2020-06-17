@@ -1,3 +1,4 @@
+
 class DirectedGraph(object):
 
     def __init__(self):
@@ -47,6 +48,7 @@ class DirectedGraph(object):
             if edges[k]:
                 return False
         return True
+
 
     def neighbors(self, v):
         return self.e[v]

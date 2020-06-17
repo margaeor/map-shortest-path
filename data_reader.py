@@ -10,6 +10,8 @@ from graph import DirectedGraph, UndirectedGraph
 from kirkpatrick import Locator
 import matplotlib.pyplot as plt
 import constants
+from collections import defaultdict,deque
+from itertools import combinations
 
 from triangulator import earcut
 
@@ -103,7 +105,81 @@ def create_kirkpatrick(point_dict,triangulation):
     runLocator(triangles,outline,point_to_id)
 
 
+class DualGraph:
 
+    def __init__(self, triangulation):
+        self.g = UndirectedGraph()
+        self.edges = defaultdict(list)
+        self.triangulation = triangulation
+
+        # Process every triangle of the triangulation
+        for i,trig in enumerate(triangulation):
+
+            # Process every edge of the triangle
+            for subset in combinations(trig, 2):
+                key = tuple(sorted(subset))
+
+                if len(self.edges[key]) > 0:
+                    # Connect triangle to neighbouring triangles
+                    for j in self.edges[key]:
+                        self.g.connect(i,j)
+
+                self.edges[key].append(i)
+
+
+    def __construct_path(self, pred, f):
+
+        node = f
+        path = []
+
+        while True:
+
+            if node not in pred:
+                return []
+
+            path.append(node)
+            if pred[node] == None:
+                return list(reversed(path))
+
+            node = pred[node]
+
+    def bfs(self, s, f):
+
+        # Mark all the vertices as not visited
+        visited = [False] * (len(self.triangulation))
+
+        # Create a queue for BFS
+        queue = deque([])
+
+        # Mark the source node as
+        # visited and enqueue it
+        queue.append(s)
+        visited[s] = True
+
+        pred = {s: None}
+
+        while queue:
+
+            # Dequeue a vertex from
+            # queue and print it
+            s = queue.popleft()
+
+            if s == f:
+                return self.__construct_path(pred, s)
+
+            # Get all adjacent vertices of the
+            # dequeued vertex s. If a adjacent
+            # has not been visited, then mark it
+            # visited and enqueue it
+            for i in self.g.e[s]:
+                if visited[i] == False:
+                    pred[i] = s
+                    queue.append(i)
+                    visited[i] = True
+
+
+    def find_path_between_nodes(self,s,f):
+        return self.bfs(s,f)
 
 
 class PointLocatorPoly:
@@ -136,7 +212,9 @@ class PointLocatorPoly:
         self.point_id_dict = {Point(p[0], p[1]): i for i, p in enumerate(points)}
         self.triangle_id_dict = {t:i for i,t in enumerate(triang)}
 
-        
+        # Construct the dual graph
+        self.dual_graph = DualGraph(self.id_triangles)
+
 
     def size(self):
         return len(self.points)
