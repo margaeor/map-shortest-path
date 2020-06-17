@@ -346,8 +346,7 @@ class LinearPointLocator:
         for i,t in enumerate(self.poly.triangles):
             if t.contains(point):
                 return i
-            else:
-                return None
+        return None
 
 
 
