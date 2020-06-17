@@ -44,6 +44,7 @@ def runLocator(regions,outline,point_to_id):
         # Test n random interior points per region
         for k in range(n):
             target = region.smartInteriorPoint()
+            print(target)
             target_region = l.locate(target)
 
         # Animate one interior point
@@ -212,7 +213,7 @@ class PointLocatorPoly:
         self.id_triangles = [triang[i:i+3] for i in range(0,len(triang),3)]
 
         self.point_id_dict = {Point(p[0], p[1]): i for i, p in enumerate(points)}
-        self.triangle_id_dict = {t:i for i,t in enumerate(triang)}
+        self.triangle_id_dict = {t:i for i,t in enumerate(self.triangles)}
 
         # Construct the dual graph
         self.dual_graph = DualGraph(self.id_triangles)
@@ -275,17 +276,19 @@ class PointLocator:
 
         for i,s in enumerate(self.search_structures):
             l = s.locate(point)
-            if l>=0:
+            if l is not None:
                 return (i,l)
-            else:
-                return None
+
+        return None
 
     def click_event(self,event):
 
         print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
               (event.button, event.x, event.y, event.xdata, event.ydata))
 
-        #l = self.locate()
+        p = Point(event.xdata,event.ydata)
+        l = self.locate(p)
+        print(l)
         plt.plot(event.xdata, event.ydata,markerfacecolor="red", marker=".", markersize=20)
         self.fig.canvas.draw()
 
@@ -293,6 +296,8 @@ class PointLocator:
 
         self.fig = plt.figure()
         plot(self.polygons)
+
+        #show(self.polygons[0].triangles)
 
         cid = self.fig.canvas.mpl_connect('button_press_event', self.click_event)
         plt.show()
@@ -309,7 +314,9 @@ class KirkpatrickPointLocator:
     def __init__(self, poly : PointLocatorPoly):
         self.poly = poly
         poly_shape = Polygon(poly.points)
-        self.locator = Locator(poly.triangles,outline=Polygon(poly.points))
+        triangles = poly.triangles
+
+        self.locator = Locator(triangles,outline=poly_shape)
 
 
     def locate(self, point: Point):
@@ -318,6 +325,8 @@ class KirkpatrickPointLocator:
 
         if loc:
             return self.poly.get_triangle_id(loc)
+        else:
+            return None
 
 
 '''
@@ -338,7 +347,7 @@ class LinearPointLocator:
             if t.contains(point):
                 return i
             else:
-                return -1
+                return None
 
 
 
@@ -349,6 +358,8 @@ point_locator = PointLocator()
 for i,p in enumerate(rp):
 
     point_locator.add_polygon(PointLocatorPoly(p))
+
+
 
     # flattened_point  = []
     #
@@ -371,6 +382,7 @@ for i,p in enumerate(rp):
 
 
 point_locator.start_gui()
+
 
 # with open('data.json', 'w') as outfile:
 #     json.dump(flattened, outfile)
