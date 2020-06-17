@@ -115,6 +115,8 @@ class DualGraph:
         # Process every triangle of the triangulation
         for i,trig in enumerate(triangulation):
 
+            self.g.add_node(i)
+
             # Process every edge of the triangle
             for subset in combinations(trig, 2):
                 key = tuple(sorted(subset))
@@ -202,7 +204,7 @@ class PointLocatorPoly:
         triang = earcut(flattened_points)
 
         # Create triangle object from triangles
-        self.triangles = [Triangle(*[triang[i+j] for j in range(3)])
+        self.triangles = [Triangle(*[self.points[triang[i+j]] for j in range(3)])
                 for i in range(0,len(triang),3)]
 
         # Triangles where the edges are represented by point
@@ -219,19 +221,19 @@ class PointLocatorPoly:
     def size(self):
         return len(self.points)
 
-    def triangle_to_id(self, triang: Triangle):
+    def get_triangle_id(self, triang: Triangle):
 
-        if point in self.triangle_id_dict:
-            return self.triangle_id_dict[point]
+        if triang in self.triangle_id_dict:
+            return self.triangle_id_dict[triang]
         else:
-            return -1
+            return None
 
-    def point_to_id(self,point: Point):
+    def get_point_id(self,point: Point):
 
         if point in self.point_id_dict:
             return self.point_id_dict[point]
         else:
-            return -1
+            return None
 
     # def id_to_point(self,id):
     #
@@ -289,12 +291,16 @@ class KirkpatrickPointLocator:
 
     def __init__(self, poly : PointLocatorPoly):
         self.poly = poly
+        poly_shape = Polygon(poly.points)
         self.locator = Locator(poly.triangles,outline=Polygon(poly.points))
 
 
     def locate(self, point: Point):
 
         loc = self.locator.locate(point)
+
+        if loc:
+            return self.poly.get_triangle_id(loc)
 
 
 '''
@@ -319,29 +325,33 @@ class LinearPointLocator:
 
 
 
-rp = polygons[:1]
+rp = polygons
 
+point_locator = PointLocator()
 
 for i,p in enumerate(rp):
 
+    point_locator.add_polygon(PointLocatorPoly(p))
 
-    flattened_point  = []
+    # flattened_point  = []
+    #
+    # for point in p:
+    #     flattened_point.append(point[0])
+    #     flattened_point.append(point[1])
+    #
+    # #flattened_point = list(reversed(flattened_point))
+    #
+    # flattened.append(flattened_point)
+    #
+    # trig = earcut(flattened_point)
+    #
+    # create_kirkpatrick(p, trig)
+    # #create_kirkpatrick(idxes,idxes2_out)
+    #
+    # t.append(trig)
+    # print(f"Finished {i}")
 
-    for point in p:
-        flattened_point.append(point[0])
-        flattened_point.append(point[1])
-
-    #flattened_point = list(reversed(flattened_point))
-
-    flattened.append(flattened_point)
-
-    trig = earcut(flattened_point)
-
-    create_kirkpatrick(p, trig)
-    #create_kirkpatrick(idxes,idxes2_out)
-
-    t.append(trig)
-    print(f"Finished {i}")
+point_locator.plot()
 
 # with open('data.json', 'w') as outfile:
 #     json.dump(flattened, outfile)
