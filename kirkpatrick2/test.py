@@ -1,12 +1,13 @@
 import unittest
 from random import random
+
+from geo.drawer import plot, plotPoints, show, showPoints
+from geo.generator import randomConvexPolygon, randomConcaveTiling
 from geo.shapes import Point, Polygon, Triangle
 from geo.spatial import triangulatePolygon
-from geo.generator import randomConvexPolygon, randomConcaveTiling
-from geo.drawer import plot, plotPoints, show, showPoints
-from min_triangle import minTriangle, boundingTriangle
 from graph import DirectedGraph, UndirectedGraph
-from kirkpatrick import Locator
+from min_triangle import minTriangle, boundingTriangle
+from point_location.kirkpatrick import Locator
 
 
 class TestGeo(unittest.TestCase):
