@@ -25,10 +25,10 @@ class PathFinder:
         last_edge_l = None
         last_edge_r = None
 
-        i = 0
+        #i = 0
 
         print(len(edge_path))
-        for e in edge_path:
+        for i,e in enumerate(edge_path):
             p1, p2 = point_dict[e[0]], point_dict[e[1]]
             p1_id, p2_id = e[0], e[1]
 
@@ -44,53 +44,8 @@ class PathFinder:
             #     p1, p2 = p2, p1
             #     p1_id, p2_id = p2_id, p1_id
 
-            if p2 == last_edge_l:
-                # Proceeding right
-                if ccw(tail[-1], p2, point_dict[left[-1]]):
-                    print("OK situation right", p2)
-                    right[-1] = p2_id
-                else:
-                    print("Weird situation right")
-                    # change the appex
-                    right[-1] = p2_id
-
-                    # left[-1] = p1_id
-                    tail.append(point_dict[left.pop()])
-                    plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
-
-            elif p2 == last_edge_r:
-                if ccw(tail[-1], point_dict[right[-1]], p1):
-                    print("OK situation left", p1)
-                    left[-1] = p1_id
-                    plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'y')
-                else:
-                    print("Weird situation left")
-                    # change the appex
-                    left[-1] = p1_id
-                    tail.append(point_dict[right.pop()])
-
-            else:
-                left.append(p1_id)
-                right.append(p2_id)
-
-            # if len(left) == 0:
-            #     left.append(p1_id)
-            # elif left[-1] != p1_id and ccw(tail[-1], p1, point_dict[left[-1]]):
-            #     if ccw(tail[-1], point_dict[right[-1]], p1):
-            #         print("OK situation left", p1)
-            #         left[-1] = p1_id
-            #         plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'b')
-            #     else:
-            #         print("Weird situation left")
-            #         # change the appex
-            #         left[-1] = p1_id
-            #         tail.append(point_dict[right.pop()])
-            # else:
-            #     print("Not preceeding left", p1)
-            #
-            # if len(right) == 0:
-            #     right.append(p2_id)
-            # elif right[-1] != p2_id and ccw(tail[-1], point_dict[right[-1]], p2):
+            # if p2 == last_edge_l:
+            #     # Proceeding right
             #     if ccw(tail[-1], p2, point_dict[left[-1]]):
             #         print("OK situation right", p2)
             #         right[-1] = p2_id
@@ -102,8 +57,60 @@ class PathFinder:
             #         # left[-1] = p1_id
             #         tail.append(point_dict[left.pop()])
             #         plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
+            #
+            # elif p2 == last_edge_r:
+            #     if ccw(tail[-1], point_dict[right[-1]], p1):
+            #         print("OK situation left", p1)
+            #         left[-1] = p1_id
+            #         plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'y')
+            #     else:
+            #         print("Weird situation left")
+            #         # change the appex
+            #         left[-1] = p1_id
+            #         tail.append(point_dict[right.pop()])
+            #
             # else:
-            #     print("Not preceeding right", p2)
+            #     left.append(p1_id)
+            #     right.append(p2_id)
+
+            if i == 0:
+                left.append(p1_id)
+            elif point_dict[left[-1]] == tail[-1]:
+                # If appex is the same as previous left, then add the current point no matter what
+                left.append(p1_id)
+            elif left[-1] != p1_id and ccw(tail[-1], p1, point_dict[left[-1]]):
+                if ccw(tail[-1], point_dict[right[-1]], p1):
+                    print("OK situation left", p1)
+                    left[-1] = p1_id
+                    plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'b')
+                else:
+                    print("Weird situation left")
+                    # change the appex
+                    left[-1] = p1_id
+                    tail.append(point_dict[right[-1]])
+            else:
+                print("Not preceeding left", p1)
+
+            if i == 0:
+                right.append(p2_id)
+            elif point_dict[right[-1]] == tail[-1]:
+                # If appex is the same as previous right, then add the current point no matter what
+                right.append(p2_id)
+            elif right[-1] != p2_id and ccw(tail[-1], point_dict[right[-1]], p2):
+                if ccw(tail[-1], p2, point_dict[left[-1]]):
+                    print("OK situation right", p2)
+                    right[-1] = p2_id
+                else:
+                    print("Weird situation right")
+                    # change the appex
+                    right[-1] = p2_id
+
+                    # left[-1] = p1_id
+                    tail.append(point_dict[left[-1]])
+                    plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
+            else:
+                print("Not preceeding right", p2)
+
 
             # print('(l1,r1,a)=', dg.P[left[-1]],dg.P[right[-1]],tail[-1])
             last_edge_l = p1
