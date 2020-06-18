@@ -25,6 +25,8 @@ class Point(object):
         return "(" + str(self.x) + ", " + str(self.y) + ")"
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
