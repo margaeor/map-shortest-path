@@ -80,17 +80,17 @@ class PathFinder:
 
                 if ccw(tail[-1], p1, left[-1]):
 
-                    has_collision = False
-                    for i,p in reversed(list(enumerate(right))):
+                    last_collision = -1
+                    for i,p in enumerate(right):
                         if not ccw(tail[-1], p, p1):
                             # Point of right segment is left of point of left segment(violation)
                             tail.append(right[i])
-                            left = [p1]
-                            right = right[i+1:]
-                            has_collision = True
-                            break
+                            last_collision = i
 
-                    if not has_collision:
+                    if last_collision >= 0:
+                        left = [p1]
+                        right = right[last_collision + 1:]
+                    else:
                         left[-1] = p1
                 else:
                     left.append(p1)
@@ -112,17 +112,17 @@ class PathFinder:
 
                 if ccw(tail[-1], right[-1], p2):
 
-                    has_collision = False
-                    for i, p in reversed(list(enumerate(left))):
-                        if not ccw(tail[-1],  p1, p):
-                            # Point of left segment is right of point of right segment(violation)
+                    last_collision = -1
+                    for i,p in enumerate(left):
+                        if not ccw(tail[-1], p2, p):
+                            # Point of right segment is left of point of left segment(violation)
                             tail.append(left[i])
-                            right = [p2]
-                            left = left[i + 1:]
-                            has_collision = True
-                            break
+                            last_collision = i
 
-                    if not has_collision:
+                    if last_collision >= 0:
+                        right = [p2]
+                        left = left[last_collision + 1:]
+                    else:
                         right[-1] = p2
                 else:
                     right.append(p2)
@@ -289,17 +289,17 @@ class ProgramDriver:
             print('Point not inside any polygon. Pick another one')
             return
         else:
-            self.ps,self.pf = Point(167.6,62.7),Point(136.8,48.8); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
-            # if self.s is None:
-            #     self.s = l
-            #     self.ps = p
-            # elif self.f is None:
-            #     if l[0] != self.s[0]:
-            #         print('Points not inside the same polygon. Pick another one')
-            #         return
-            #     else:
-            #         self.pf = p
-            #         self.f = l
+            #self.ps,self.pf = Point(167.6,62.7),Point(136.8,48.8); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
+            if self.s is None:
+                self.s = l
+                self.ps = p
+            elif self.f is None:
+                if l[0] != self.s[0]:
+                    print('Points not inside the same polygon. Pick another one')
+                    return
+                else:
+                    self.pf = p
+                    self.f = l
 
             if self.s is not None and self.f is not None:
                 print('Calculate path: ')
