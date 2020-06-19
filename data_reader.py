@@ -2,7 +2,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import shapefile
-
+import constants
 from geo.drawer import plot, plotPoints, show, showPoints
 from geo.shapes import Point, Polygon, Triangle
 from point_location.kirkpatrick import Locator
@@ -26,56 +26,14 @@ class PathFinder:
         last_edge_l = None
         last_edge_r = None
 
-        #i = 0
-        #edge_path = edge_path + [(q,q)]
-        print(len(edge_path))
         for i,e in enumerate(edge_path):
             p1, p2 = point_dict[e[0]], point_dict[e[1]]
-            #p1_id, p2_id = e[0], e[1]
 
 
             if p2 == last_edge_l or p1 == last_edge_r or (last_edge_r is None and last_edge_l is None and ccw(tail[-1], p2, p1)):
                 p1, p2 = p2, p1
-                #p1_id, p2_id = p2_id, p1_id
 
-            # prev_center = tail[-1] if last_edge_l is None or last_edge_r is None else (
-            #                                                                           last_edge_r + last_edge_l) / 2
-            # # print('Prev center:',prev_center)
-            # if ccw(prev_center, p1, p2):
-            #     p1, p2 = p2, p1
-            #     p1_id, p2_id = p2_id, p1_id
 
-            # if p2 == last_edge_l:
-            #     # Proceeding right
-            #     if ccw(tail[-1], p2, point_dict[left[-1]]):
-            #         print("OK situation right", p2)
-            #         right[-1] = p2_id
-            #     else:
-            #         print("Weird situation right")
-            #         # change the appex
-            #         right[-1] = p2_id
-            #
-            #         # left[-1] = p1_id
-            #         tail.append(point_dict[left.pop()])
-            #         plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
-            #
-            # elif p2 == last_edge_r:
-            #     if ccw(tail[-1], point_dict[right[-1]], p1):
-            #         print("OK situation left", p1)
-            #         left[-1] = p1_id
-            #         plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'y')
-            #     else:
-            #         print("Weird situation left")
-            #         # change the appex
-            #         left[-1] = p1_id
-            #         tail.append(point_dict[right.pop()])
-            #
-            # else:
-            #     left.append(p1_id)
-            #     right.append(p2_id)
-
-            print(p1)
-            print(p2)
             if len(left) == 0 and p1 != tail[-1]: #or (left[-1] == tail[-1]):
                 # If appex is the same as previous left, then add the current point
                 print("L:reset left")
@@ -87,7 +45,8 @@ class PathFinder:
                     last_collision = -1
                     for i,p in enumerate(right):
                         if ccw(tail[-1], p, p1):
-                            # Point of right segment is left of point of left segment(violation)
+                            # Point of right segment is left of point of left segment(violation).
+                            # So, add violating vertices to tail
                             tail.append(right[i])
                             last_collision = i
 
@@ -101,16 +60,7 @@ class PathFinder:
                 else:
                     print("L: appending")
                     left.append(p1)
-                # if ccw(tail[-1], right[-1], p1):
-                #     print("OK situation left", p1)
-                #     left[-1] = p1
-                #     plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'b')
-                # else:
-                #     print("Weird situation left")
-                #     # change the appex
-                #     tail.append(right[-1])
-                #
-                #     left = [p1]
+
 
             if len(right) == 0 and p2 != tail[-1]:
                 # If appex is the same as previous right, then add the current point
@@ -124,6 +74,7 @@ class PathFinder:
                     for i,p in enumerate(left):
                         if ccw(tail[-1], p2, p):
                             # Point of right segment is left of point of left segment(violation)
+                            # So, add violating vertices to tail
                             tail.append(left[i])
                             last_collision = i
 
@@ -138,31 +89,7 @@ class PathFinder:
                     print("R: appending")
                     right.append(p2)
 
-            # if i == 0:
-            #     right.append(p2_id)
-            # elif point_dict[right[-1]] == tail[-1]:
-            #     # If appex is the same as previous right, then add the current point no matter what
-            #     right.append(p2_id)
-            # elif right[-1] != p2_id and ccw(tail[-1], point_dict[right[-1]], p2):
-            #     if ccw(tail[-1], p2, point_dict[left[-1]]):
-            #         print("OK situation right", p2)
-            #         right[-1] = p2_id
-            #     else:
-            #         print("Weird situation right")
-            #         # change the appex
-            #
-            #
-            #         # left[-1] = p1_id
-            #         tail.append(point_dict[left[-1]])
-            #
-            #         right = [tail[-1],p2_id]
-            #
-            #         plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
-            # else:
-            #     print("Not preceeding right", p2)
 
-
-            # print('(l1,r1,a)=', dg.P[left[-1]],dg.P[right[-1]],tail[-1])
             last_edge_l = p1
             last_edge_r = p2
 
@@ -175,68 +102,6 @@ class PathFinder:
         for i,p in enumerate(left):
             if ccw(apex, q, p):
                 tail.append(left[i])
-        tail.append(q)
-        return tail
-
-    def find_path_funnel2(self, point_dict , edge_path, p, q):
-
-        tail = [p]
-        left = []
-        right = []
-
-        last_edge_l = None
-        last_edge_r = None
-
-        i = 0
-
-        print(len(edge_path))
-        for e in edge_path:
-            p1, p2 = point_dict[e[0]], point_dict[e[1]]
-            p1_id, p2_id = e[0], e[1]
-
-            prev_center = tail[-1] if last_edge_l is None or last_edge_r is None else (
-                                                                                      last_edge_r + last_edge_l) / 2
-            # print('Prev center:',prev_center)
-            if ccw(prev_center, p1, p2):
-                p1, p2 = p2, p1
-                p1_id, p2_id = p2_id, p1_id
-
-            if len(left) == 0:
-                left.append(p1_id)
-            elif left[-1] != p1_id and ccw(tail[-1], p1, point_dict[left[-1]]):
-                if ccw(tail[-1], point_dict[right[-1]], p1):
-                    print("OK situation left", p1)
-                    left[-1] = p1_id
-                    plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'b')
-                else:
-                    print("Weird situation left")
-                    # change the appex
-                    left[-1] = p1_id
-                    tail.append(point_dict[right.pop()])
-            else:
-                print("Not preceeding left", p1)
-
-            if len(right) == 0:
-                right.append(p2_id)
-            elif right[-1] != p2_id and ccw(tail[-1], point_dict[right[-1]], p2):
-                if ccw(tail[-1], p2, point_dict[left[-1]]):
-                    print("OK situation right", p2)
-                    right[-1] = p2_id
-                else:
-                    print("Weird situation right")
-                    # change the appex
-                    right[-1] = p2_id
-
-                    # left[-1] = p1_id
-                    tail.append(point_dict[left.pop()])
-                    plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
-            else:
-                print("Not preceeding right", p2)
-
-            # print('(l1,r1,a)=', dg.P[left[-1]],dg.P[right[-1]],tail[-1])
-            last_edge_l = p1
-            last_edge_r = p2
-
         tail.append(q)
         return tail
 
@@ -287,7 +152,7 @@ class ProgramDriver:
         with shapefile.Reader(shape_file) as shp:
             shapes = shp.shapes()
 
-        self.polygons = [shape.points for shape in reversed(shapes[:2000])]
+        self.polygons = [shape.points for shape in reversed(shapes[:constants.MAX_POLYGONS])]
 
         print("Processing map")
         for i,p in enumerate(tqdm(self.polygons)):

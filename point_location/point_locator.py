@@ -2,12 +2,9 @@
 from collections import defaultdict, deque
 from itertools import combinations
 
-import matplotlib.pyplot as plt
-
 import constants
-from geo.drawer import plot,plotPoints
+from geo.graph import UndirectedGraph
 from geo.shapes import Point, Polygon, Triangle
-from graph import UndirectedGraph
 from point_location.kirkpatrick import Locator
 from triangulator import earcut
 

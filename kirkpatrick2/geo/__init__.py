@@ -1,1 +1,0 @@
-#!/usr/bin/env pythonimport shapesimport spatialimport random

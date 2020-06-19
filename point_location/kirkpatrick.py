@@ -1,8 +1,11 @@
-from geo import shapes, spatial
-import min_triangle
-from graph import UndirectedGraph, DirectedGraph
 from functools import reduce
+
 import matplotlib.pyplot as plt
+from point_location import min_triangle
+
+from geo import shapes, spatial
+from geo.graph import UndirectedGraph, DirectedGraph
+
 
 def plot_triangles(triangles):
     #plt.figure()
