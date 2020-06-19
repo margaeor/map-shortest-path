@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import shapefile
@@ -6,7 +7,7 @@ from geo.drawer import plot, plotPoints, show, showPoints
 from geo.shapes import Point, Polygon, Triangle
 from point_location.kirkpatrick import Locator
 from point_location.point_locator import PointLocator, PointLocatorPoly
-
+from tqdm import tqdm
 
 def ccw(A, B, C):
     """Tests whether the line formed by A, B, and C is ccw"""
@@ -270,7 +271,7 @@ class ClickEvent():
 
 class ProgramDriver:
 
-    def __init__(self, shape_file="./GSHHS_c_L1.shp"):
+    def __init__(self, shape_file="./data/h/GSHHS_h_L1.shp"):
 
         self.point_locator = PointLocator()
         self.path_finder = PathFinder()
@@ -286,14 +287,14 @@ class ProgramDriver:
         with shapefile.Reader(shape_file) as shp:
             shapes = shp.shapes()
 
-        self.polygons = [shape.points for shape in shapes]
+        self.polygons = [shape.points for shape in reversed(shapes[:2000])]
 
-
-        for i,p in enumerate(self.polygons):
+        print("Processing map")
+        for i,p in enumerate(tqdm(self.polygons)):
 
             self.point_locator.add_polygon(PointLocatorPoly(p))
 
-
+        print("Map processing finished!")
 
     def click_event(self,event):
 
@@ -338,7 +339,9 @@ class ProgramDriver:
     def show_map(self):
 
         self.fig = plt.figure()
-        plot(self.point_locator.polygons)
+        print("Rendering matplotlib GUI...")
+        polys_to_plot = self.point_locator.polygons
+        plot(polys_to_plot)
 
         ce = ClickEvent(self.fig, self.click_event, button=1)
 
