@@ -30,12 +30,12 @@ class PathFinder:
         print(len(edge_path))
         for i,e in enumerate(edge_path):
             p1, p2 = point_dict[e[0]], point_dict[e[1]]
-            p1_id, p2_id = e[0], e[1]
+            #p1_id, p2_id = e[0], e[1]
 
 
             if p2 == last_edge_l or p1 == last_edge_r or (last_edge_r is None and last_edge_l is None and ccw(tail[-1], p1, p2)):
                 p1, p2 = p2, p1
-                p1_id, p2_id = p2_id, p1_id
+                #p1_id, p2_id = p2_id, p1_id
 
             # prev_center = tail[-1] if last_edge_l is None or last_edge_r is None else (
             #                                                                           last_edge_r + last_edge_l) / 2
@@ -73,43 +73,82 @@ class PathFinder:
             #     left.append(p1_id)
             #     right.append(p2_id)
 
-            if i == 0:
-                left.append(p1_id)
-            elif point_dict[left[-1]] == tail[-1]:
-                # If appex is the same as previous left, then add the current point no matter what
-                left.append(p1_id)
-            elif left[-1] != p1_id and ccw(tail[-1], p1, point_dict[left[-1]]):
-                if ccw(tail[-1], point_dict[right[-1]], p1):
-                    print("OK situation left", p1)
-                    left[-1] = p1_id
-                    plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'b')
-                else:
-                    print("Weird situation left")
-                    # change the appex
-                    left[-1] = p1_id
-                    tail.append(point_dict[right[-1]])
-            else:
-                print("Not preceeding left", p1)
+            if len(left) == 0 and p1 != tail[-1]: #or (left[-1] == tail[-1]):
+                # If appex is the same as previous left, then add the current point
+                left = [p1]
+            elif len(left) > 0 and left[-1] != p1:
 
-            if i == 0:
-                right.append(p2_id)
-            elif point_dict[right[-1]] == tail[-1]:
-                # If appex is the same as previous right, then add the current point no matter what
-                right.append(p2_id)
-            elif right[-1] != p2_id and ccw(tail[-1], point_dict[right[-1]], p2):
-                if ccw(tail[-1], p2, point_dict[left[-1]]):
-                    print("OK situation right", p2)
-                    right[-1] = p2_id
-                else:
-                    print("Weird situation right")
-                    # change the appex
-                    right[-1] = p2_id
+                if ccw(tail[-1], p1, left[-1]):
 
-                    # left[-1] = p1_id
-                    tail.append(point_dict[left[-1]])
-                    plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
-            else:
-                print("Not preceeding right", p2)
+                    has_collision = False
+                    for i,p in reversed(list(enumerate(right))):
+                        if not ccw(tail[-1], p, p1):
+                            # Point of right segment is left of point of left segment(violation)
+                            tail.append(right[i])
+                            left = [p1]
+                            right = right[i+1:]
+                            has_collision = True
+                            break
+
+                    if not has_collision:
+                        left[-1] = p1
+                else:
+                    left.append(p1)
+                # if ccw(tail[-1], right[-1], p1):
+                #     print("OK situation left", p1)
+                #     left[-1] = p1
+                #     plt.plot(np.array([tail[-1].x,p1.x]),np.array([tail[-1].y,p1.y]),'b')
+                # else:
+                #     print("Weird situation left")
+                #     # change the appex
+                #     tail.append(right[-1])
+                #
+                #     left = [p1]
+
+            if len(right) == 0 and p2 != tail[-1]:
+                # If appex is the same as previous right, then add the current point
+                right = [p2]
+            elif len(right) > 0 and right[-1] != p2:
+
+                if ccw(tail[-1], right[-1], p2):
+
+                    has_collision = False
+                    for i, p in reversed(list(enumerate(left))):
+                        if not ccw(tail[-1],  p1, p):
+                            # Point of left segment is right of point of right segment(violation)
+                            tail.append(left[i])
+                            right = [p2]
+                            left = left[i + 1:]
+                            has_collision = True
+                            break
+
+                    if not has_collision:
+                        right[-1] = p2
+                else:
+                    right.append(p2)
+
+            # if i == 0:
+            #     right.append(p2_id)
+            # elif point_dict[right[-1]] == tail[-1]:
+            #     # If appex is the same as previous right, then add the current point no matter what
+            #     right.append(p2_id)
+            # elif right[-1] != p2_id and ccw(tail[-1], point_dict[right[-1]], p2):
+            #     if ccw(tail[-1], p2, point_dict[left[-1]]):
+            #         print("OK situation right", p2)
+            #         right[-1] = p2_id
+            #     else:
+            #         print("Weird situation right")
+            #         # change the appex
+            #
+            #
+            #         # left[-1] = p1_id
+            #         tail.append(point_dict[left[-1]])
+            #
+            #         right = [tail[-1],p2_id]
+            #
+            #         plt.plot(np.array([tail[-1].x, p2.x]), np.array([tail[-1].y, p2.y]), 'y')
+            # else:
+            #     print("Not preceeding right", p2)
 
 
             # print('(l1,r1,a)=', dg.P[left[-1]],dg.P[right[-1]],tail[-1])
@@ -250,7 +289,7 @@ class ProgramDriver:
             print('Point not inside any polygon. Pick another one')
             return
         else:
-            self.ps,self.pf = Point(27,41.5),Point(42.7,37.1); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
+            self.ps,self.pf = Point(167.6,62.7),Point(136.8,48.8); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
             # if self.s is None:
             #     self.s = l
             #     self.ps = p
