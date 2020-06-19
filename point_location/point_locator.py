@@ -201,7 +201,7 @@ class PointLocator:
 
             trig = poly.triangles[t]
 
-            plot(trig,'b')
+            #plot(trig,'b')
 
         if not triangle_path or len(triangle_path) < 2:
             return []

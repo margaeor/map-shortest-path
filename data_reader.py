@@ -26,10 +26,10 @@ class PathFinder:
         last_edge_r = None
 
         #i = 0
-        edge_path = edge_path + [(q,q)]
+        #edge_path = edge_path + [(q,q)]
         print(len(edge_path))
         for i,e in enumerate(edge_path):
-            p1, p2 = (e[0],e[1]) if isinstance(e[0],Point) else (point_dict[e[0]], point_dict[e[1]])
+            p1, p2 = point_dict[e[0]], point_dict[e[1]]
             #p1_id, p2_id = e[0], e[1]
 
 
@@ -85,7 +85,7 @@ class PathFinder:
 
                     last_collision = -1
                     for i,p in enumerate(right):
-                        if not ccw(tail[-1], p, p1):
+                        if ccw(tail[-1], p, p1):
                             # Point of right segment is left of point of left segment(violation)
                             tail.append(right[i])
                             last_collision = i
@@ -121,7 +121,7 @@ class PathFinder:
 
                     last_collision = -1
                     for i,p in enumerate(left):
-                        if not ccw(tail[-1], p2, p):
+                        if ccw(tail[-1], p2, p):
                             # Point of right segment is left of point of left segment(violation)
                             tail.append(left[i])
                             last_collision = i
@@ -165,6 +165,14 @@ class PathFinder:
             last_edge_l = p1
             last_edge_r = p2
 
+        # Fix last collisions
+        for i, p in enumerate(right[:-1]):
+            if ccw(tail[-1], p, q):
+                tail.append(right[i])
+
+        for i,p in enumerate(left[:-1]):
+            if ccw(tail[-1], q, p):
+                tail.append(left[i])
         tail.append(q)
         return tail
 
@@ -299,17 +307,17 @@ class ProgramDriver:
             print('Point not inside any polygon. Pick another one')
             return
         else:
-            self.ps,self.pf = Point(-74.6,-10.7),Point(-70.7,-34.1); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
-            # if self.s is None:
-            #     self.s = l
-            #     self.ps = p
-            # elif self.f is None:
-            #     if l[0] != self.s[0]:
-            #         print('Points not inside the same polygon. Pick another one')
-            #         return
-            #     else:
-            #         self.pf = p
-            #         self.f = l
+            #self.ps,self.pf = Point(-74.6,-10.7),Point(-70.7,-34.1); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
+            if self.s is None:
+                self.s = l
+                self.ps = p
+            elif self.f is None:
+                if l[0] != self.s[0]:
+                    print('Points not inside the same polygon. Pick another one')
+                    return
+                else:
+                    self.pf = p
+                    self.f = l
 
             if self.s is not None and self.f is not None:
                 print('Calculate path: ')
