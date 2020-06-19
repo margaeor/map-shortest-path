@@ -165,13 +165,14 @@ class PathFinder:
             last_edge_l = p1
             last_edge_r = p2
 
+        apex = tail[-1]
         # Fix last collisions
-        for i, p in enumerate(right[:-1]):
-            if ccw(tail[-1], p, q):
+        for i, p in enumerate(right):
+            if ccw(apex, p, q):
                 tail.append(right[i])
 
-        for i,p in enumerate(left[:-1]):
-            if ccw(tail[-1], q, p):
+        for i,p in enumerate(left):
+            if ccw(apex, q, p):
                 tail.append(left[i])
         tail.append(q)
         return tail
@@ -307,7 +308,7 @@ class ProgramDriver:
             print('Point not inside any polygon. Pick another one')
             return
         else:
-            #self.ps,self.pf = Point(-74.6,-10.7),Point(-70.7,-34.1); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
+            #self.ps,self.pf = Point(34.45,28.32),Point(35.74,28.9); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
             if self.s is None:
                 self.s = l
                 self.ps = p
