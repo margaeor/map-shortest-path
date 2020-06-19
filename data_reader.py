@@ -26,14 +26,14 @@ class PathFinder:
         last_edge_r = None
 
         #i = 0
-
+        edge_path = edge_path + [(q,q)]
         print(len(edge_path))
         for i,e in enumerate(edge_path):
-            p1, p2 = point_dict[e[0]], point_dict[e[1]]
+            p1, p2 = (e[0],e[1]) if isinstance(e[0],Point) else (point_dict[e[0]], point_dict[e[1]])
             #p1_id, p2_id = e[0], e[1]
 
 
-            if p2 == last_edge_l or p1 == last_edge_r or (last_edge_r is None and last_edge_l is None and ccw(tail[-1], p1, p2)):
+            if p2 == last_edge_l or p1 == last_edge_r or (last_edge_r is None and last_edge_l is None and ccw(tail[-1], p2, p1)):
                 p1, p2 = p2, p1
                 #p1_id, p2_id = p2_id, p1_id
 
@@ -73,12 +73,15 @@ class PathFinder:
             #     left.append(p1_id)
             #     right.append(p2_id)
 
+            print(p1)
+            print(p2)
             if len(left) == 0 and p1 != tail[-1]: #or (left[-1] == tail[-1]):
                 # If appex is the same as previous left, then add the current point
+                print("L:reset left")
                 left = [p1]
             elif len(left) > 0 and left[-1] != p1:
 
-                if ccw(tail[-1], p1, left[-1]):
+                if not ccw(tail[-1], p1, left[-1]):
 
                     last_collision = -1
                     for i,p in enumerate(right):
@@ -88,11 +91,14 @@ class PathFinder:
                             last_collision = i
 
                     if last_collision >= 0:
+                        print("L:collision")
                         left = [p1]
                         right = right[last_collision + 1:]
                     else:
+                        print("L:narrowing funnel")
                         left[-1] = p1
                 else:
+                    print("L: appending")
                     left.append(p1)
                 # if ccw(tail[-1], right[-1], p1):
                 #     print("OK situation left", p1)
@@ -108,9 +114,10 @@ class PathFinder:
             if len(right) == 0 and p2 != tail[-1]:
                 # If appex is the same as previous right, then add the current point
                 right = [p2]
+                print("R:reset right")
             elif len(right) > 0 and right[-1] != p2:
 
-                if ccw(tail[-1], right[-1], p2):
+                if not ccw(tail[-1], right[-1], p2):
 
                     last_collision = -1
                     for i,p in enumerate(left):
@@ -122,9 +129,12 @@ class PathFinder:
                     if last_collision >= 0:
                         right = [p2]
                         left = left[last_collision + 1:]
+                        print("R:collision")
                     else:
                         right[-1] = p2
+                        print("R:narrowing funnel")
                 else:
+                    print("R: appending")
                     right.append(p2)
 
             # if i == 0:
@@ -289,17 +299,17 @@ class ProgramDriver:
             print('Point not inside any polygon. Pick another one')
             return
         else:
-            #self.ps,self.pf = Point(167.6,62.7),Point(136.8,48.8); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
-            if self.s is None:
-                self.s = l
-                self.ps = p
-            elif self.f is None:
-                if l[0] != self.s[0]:
-                    print('Points not inside the same polygon. Pick another one')
-                    return
-                else:
-                    self.pf = p
-                    self.f = l
+            self.ps,self.pf = Point(-74.6,-10.7),Point(-70.7,-34.1); self.s,self.f = self.point_locator.locate(self.ps),self.point_locator.locate(self.pf)
+            # if self.s is None:
+            #     self.s = l
+            #     self.ps = p
+            # elif self.f is None:
+            #     if l[0] != self.s[0]:
+            #         print('Points not inside the same polygon. Pick another one')
+            #         return
+            #     else:
+            #         self.pf = p
+            #         self.f = l
 
             if self.s is not None and self.f is not None:
                 print('Calculate path: ')
