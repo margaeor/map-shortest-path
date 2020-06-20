@@ -37,4 +37,4 @@ You can adjust the project configuration by editing the file `constants.py`. The
 Apart from the classic python libraries used (e.g. numpy,matplotlib, scipy...), I also used and modified the following repositories for the project:
 
 - [mapbox/earcut](https://github.com/mapbox/earcut) as a very fast javascript polygon triangulation library, which I converted to python and used as the core triangulator.
-- [crm416/point-location](https://github.com/crm416/point-location) as an implementation of the Kirkpatrick triangulation point location in python.
+- [crm416/point-location](https://github.com/crm416/point-location) as an implementation of the Kirkpatrick point location in python.
