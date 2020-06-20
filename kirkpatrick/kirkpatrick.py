@@ -1,10 +1,10 @@
 from functools import reduce
 
 import matplotlib.pyplot as plt
-from point_location import min_triangle
+from kirkpatrick.geo import shapes, spatial
 
-from geo import shapes, spatial
-from geo.graph import UndirectedGraph, DirectedGraph
+from kirkpatrick import min_triangle
+from kirkpatrick.geo.graph import UndirectedGraph, DirectedGraph
 
 
 def plot_triangles(triangles):

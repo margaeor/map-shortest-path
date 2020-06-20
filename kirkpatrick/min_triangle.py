@@ -1,9 +1,10 @@
 from math import sqrt, ceil, floor
 
-from geo.shapes import Point, Line, Triangle, Polygon, ccw
-from geo.spatial import convexHull
-from geo.generator import randomConvexPolygon
-from geo.drawer import plot, show
+from kirkpatrick.geo.drawer import plot, show
+from kirkpatrick.geo.generator import randomConvexPolygon
+from kirkpatrick.geo.spatial import convexHull
+
+from kirkpatrick.geo.shapes import Point, Line, Triangle, Polygon, ccw
 
 
 def minTriangle(poly):

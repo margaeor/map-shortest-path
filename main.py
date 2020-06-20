@@ -1,14 +1,13 @@
+import time
+
 import matplotlib.pyplot as plt
 import shapefile
-import time
+from kirkpatrick.geo.drawer import plot, plotPoints
+
 import constants
-import sys
-from geo.drawer import plot, plotPoints, show, showPoints
-from geo.shapes import Point, Polygon, Triangle
-from point_location.kirkpatrick import Locator
-from point_location.point_locator import PointLocator, PointLocatorPoly
-from tqdm import tqdm
+from kirkpatrick.geo.shapes import Point
 from pathfinder.pathfinder import PathFinder
+from point_location.point_locator import PointLocator
 
 
 class ClickEvent():

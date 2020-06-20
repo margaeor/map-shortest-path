@@ -1,7 +1,7 @@
-from random import random
 from math import sqrt
-import geo.spatial as spatial
-from geo.drawer import *
+from random import random
+
+from kirkpatrick import geo as spatial
 
 
 def ccw(A, B, C):

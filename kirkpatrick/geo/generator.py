@@ -1,8 +1,9 @@
-from random import random
 import queue as Queue
+from random import random
 
-from geo.shapes import Point
-from geo.spatial import convexHull
+from kirkpatrick.geo.spatial import convexHull
+
+from kirkpatrick.geo.shapes import Point
 
 
 def randomPoint(k=None):

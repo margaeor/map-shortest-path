@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.spatial as sp
-from triangulation.earcut import earcut
 
+from triangulation.earcut import earcut
 from . import shapes as shapes
 
 
@@ -68,8 +68,8 @@ def triangulatePolygon(poly, hole=None):
 
     triangulation = [point_list[t] for t in triangles]
 
-    triangles = [shapes.Triangle(*[triangulation[i+j] for j in range(3)])
-                for i in range(0,len(triangulation),3)]
+    triangles = [shapes.Triangle(*[triangulation[i + j] for j in range(3)])
+                 for i in range(0,len(triangulation),3)]
 
     return triangles
 
@@ -80,7 +80,7 @@ def triangulatePoints(points):
     triangles = []
     for i in range(len(triangulation.simplices)):
         verts = list(map(lambda p: shapes.Point(p[0], p[1]),
-                    points[triangulation.simplices[i, :]]))
+                         points[triangulation.simplices[i, :]]))
         triangle = shapes.Triangle(
             verts[0], verts[1], verts[2])
         triangles.append(triangle)

@@ -1,15 +1,16 @@
 
 from collections import defaultdict, deque
 from itertools import combinations
-
-from geo.drawer import plot
-import constants
-from geo.graph import UndirectedGraph
-from geo.shapes import Point, Polygon, Triangle
-from point_location.kirkpatrick import Locator
-from triangulation.earcut import earcut
 from multiprocessing import Pool as ThreadPool
+
+from kirkpatrick.geo.drawer import plot
+from kirkpatrick.geo.shapes import Point, Polygon, Triangle
 from tqdm import tqdm
+
+import constants
+from kirkpatrick.geo.graph import UndirectedGraph
+from kirkpatrick.kirkpatrick import Locator
+from triangulation.earcut import earcut
 
 '''
 Creates a point location search structure
