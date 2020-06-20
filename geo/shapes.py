@@ -131,6 +131,7 @@ class Polygon(object):
 
         self.points = points
         self.n = len(points)
+        self.hash = hash(tuple(sorted(self.points, key=lambda p: p.x)))
 
     def __str__(self):
         s = ""
@@ -141,7 +142,7 @@ class Polygon(object):
         return s
 
     def __hash__(self):
-        return hash(tuple(sorted(self.points, key=lambda p: p.x)))
+        return self.hash
 
     def contains(self, p):
         """Returns True if p is inside self."""
@@ -338,6 +339,7 @@ class Triangle(Polygon):
     def __init__(self, A, B, C):
         self.points = [A, B, C]
         self.n = 3
+        self.hash = hash(tuple(sorted(self.points, key=lambda p: p.x)))
 
     def area(self):
         A = self.points[0]
