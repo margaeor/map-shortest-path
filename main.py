@@ -36,7 +36,6 @@ class PathFinder:
 
             if len(left) == 0 and p1 != tail[-1]: #or (left[-1] == tail[-1]):
                 # If appex is the same as previous left, then add the current point
-                print("L:reset left")
                 left = [p1]
             elif len(left) > 0 and left[-1] != p1:
 
@@ -51,21 +50,21 @@ class PathFinder:
                             last_collision = i
 
                     if last_collision >= 0:
-                        print("L:collision")
+                        # Collision with one or more previous right points when narrowing funnel
                         left = [p1]
                         right = right[last_collision + 1:]
                     else:
-                        print("L:narrowing funnel")
+                        # No collisions so we just narrow the funnel
                         left[-1] = p1
                 else:
-                    print("L: appending")
+                    # New point opens the funnel and doesn't narrow it.
+                    # so append it
                     left.append(p1)
 
 
             if len(right) == 0 and p2 != tail[-1]:
                 # If appex is the same as previous right, then add the current point
                 right = [p2]
-                print("R:reset right")
             elif len(right) > 0 and right[-1] != p2:
 
                 if not ccw(tail[-1], right[-1], p2):
@@ -79,14 +78,15 @@ class PathFinder:
                             last_collision = i
 
                     if last_collision >= 0:
+                        # Collision with one or more previous left points when narrowing funnel
                         right = [p2]
                         left = left[last_collision + 1:]
-                        print("R:collision")
                     else:
+                        # No collisions so we just narrow the funnel
                         right[-1] = p2
-                        print("R:narrowing funnel")
                 else:
-                    print("R: appending")
+                    # New point opens the funnel and doesn't narrow it.
+                    # so append it
                     right.append(p2)
 
 
@@ -152,8 +152,13 @@ class ProgramDriver:
         with shapefile.Reader(shape_file) as shp:
             shapes = shp.shapes()
 
+        num_points = sum([len(poly.points) for poly in shapes])
+
         self.polygons = [shape.points for shape in reversed(shapes[:constants.MAX_POLYGONS])]
 
+        print(f"\nNumber of polygons in file: {len(shapes)}",end='')
+        print(f"\nNumber of points in file: {num_points}",end='')
+        print(f"\nPoints of largest polygon: {len(self.polygons[-1])}")
         print("Processing map")
         for i,p in enumerate(tqdm(self.polygons)):
 
@@ -187,12 +192,11 @@ class ProgramDriver:
                     self.f = l
 
             if self.s is not None and self.f is not None:
-                print('Calculate path: ')
+                print(f'Calculating path between {self.ps} and {self.pf}:')
                 edge_path = self.point_locator.find_edge_path(self.s[0],self.s[1],self.f[1])
 
                 poly_points = self.point_locator.polygons[self.s[0]].points
                 path = self.path_finder.find_path_funnel(poly_points,edge_path,self.ps,self.pf)
-                print(path)
                 plotPoints(path,'r--')
                 self.s,self.f = None,None
                 self.ps, self.pf = None, None
@@ -214,11 +218,38 @@ class ProgramDriver:
         self.fig.canvas.mpl_connect('button_release_event', ce.onrelease)
         self.fig.canvas.mpl_connect('motion_notify_event', ce.onmove)
 
+        print("GUI successfully rendered!")
+        print("Click 2 points on the map to find a path between them")
+
         #cid = self.fig.canvas.mpl_connect('button_press_event', self.click_event)
         plt.show()
 
 
-driver = ProgramDriver()
-driver.show_map()
 
 
+#driver = ProgramDriver("./data/l/GSHHS_l_L1.shp")
+#driver.show_map()
+
+if __name__ == '__main__':
+
+    choices = ['c','l','h','i']
+    files = [str("GSHHS_"+c+"_L1.shp") for i,c in enumerate(choices)]
+    choice = '0'
+    while True:
+        print("Choose map shapefile:")
+        print("1) File (c) with 802 polygons, 7721 points")
+        print("2) File (l) with 5812 polygons, 57912 points")
+        print("3) File (h) with 145483 polygons, 1643797 points")
+        print("4) File (i) with 33447 polygons, 347247 points")
+
+        choice = input("Please make a choice: ")
+
+        try:
+            choice = int(choice)
+
+            if choice >=1 and choice <=5:
+                driver = ProgramDriver("./data/"+files[choice-1])
+                driver.show_map()
+
+        except:
+            print("Wrong input")
