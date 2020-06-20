@@ -40,7 +40,7 @@ class ProgramDriver:
 
     def __init__(self, shape_file="./data/h/GSHHS_h_L1.shp"):
 
-        self.point_locator = PointLocator()
+        self.point_locator = PointLocator(constants.VISUALIZE_TRIANGLES)
         self.path_finder = PathFinder()
 
         # Contain (polygon_id,triangle_id) of the starting
@@ -58,28 +58,24 @@ class ProgramDriver:
 
         self.polygons = [shape.points for shape in reversed(shapes[:constants.MAX_POLYGONS])]
 
-        print(f"\nNumber of polygons in file: {len(shapes)}",end='')
-        print(f"\nNumber of points in file: {num_points}",end='')
-        print(f"\nPoints of largest polygon: {len(self.polygons[-1])}")
-        print("Processing map")
-        for i,p in enumerate(tqdm(self.polygons,file=sys.stdout)):
+        print(f"Number of polygons in file: {len(shapes)}")
+        print(f"Number of points in file: {num_points}")
+        print(f"Points of largest polygon: {len(self.polygons[-1])}")
+        print("Preprocessing map")
 
-            self.point_locator.add_polygon(PointLocatorPoly(p))
-
-        print("Map processing finished!")
+        tic = time.perf_counter()
+        self.point_locator.add_polygons(self.polygons)
+        toc = time.perf_counter()
+        print(f"Preprocessing took {toc - tic:0.4f} seconds")
 
     def click_event(self,event):
 
-        #print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-        #      (event.button, event.x, event.y, event.xdata, event.ydata))
 
         p = Point(event.xdata,event.ydata)
         tic = time.perf_counter()
         l = self.point_locator.locate(p)
         toc = time.perf_counter()
         print(f"Point location took {toc - tic:0.4f} seconds")
-
-
 
         if l is None:
             print('Point not inside any polygon. Pick another one')
@@ -160,5 +156,5 @@ if __name__ == '__main__':
                 driver = ProgramDriver("./data/"+files[choice-1])
                 driver.show_map()
 
-        except:
+        except ValueError as e:
             print("Wrong input")

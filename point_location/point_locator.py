@@ -2,11 +2,27 @@
 from collections import defaultdict, deque
 from itertools import combinations
 
+from geo.drawer import plot
 import constants
 from geo.graph import UndirectedGraph
 from geo.shapes import Point, Polygon, Triangle
 from point_location.kirkpatrick import Locator
-from triangulator import earcut
+from triangulation.earcut import earcut
+from multiprocessing import Pool as ThreadPool
+from tqdm import tqdm
+
+'''
+Creates a point location search structure
+for a specific polygon
+'''
+def create_search_structure( poly):
+    if len(poly.triangles) > constants.LINEAR_SEARCH_MAX_TRIANGLES:
+        # Use Kirkpatrick structure (high construction complexity, O(logn) query)
+        return KirkpatrickPointLocator(poly)
+    else:
+        # Use linear point locator (O(n) construction, O(n) query)
+        return LinearPointLocator(poly)
+
 
 
 class DualGraph:
@@ -99,7 +115,7 @@ class PointLocatorPoly:
 
         flattened_points = []
 
-        # Flatten points to pass them to triangulator
+        # Flatten points to pass them to triangulation
         for point in points:
             flattened_points.append(point[0])
             flattened_points.append(point[1])
@@ -146,10 +162,14 @@ class PointLocatorPoly:
 
 class PointLocator:
 
-    def __init__(self):
+    def __init__(self, visualize_triang_path=False):
 
         # List of different polygons
         self.polygons = []
+
+        # Parameter of whether we want to visualize
+        # the triangles that the pathfinder passes from
+        self.visualize_triang_path = visualize_triang_path
 
         # List of structures that will answer
         # point location queries (each search
@@ -157,20 +177,23 @@ class PointLocator:
         self.search_structures = []
 
     '''
-    Adds a new polygon to the search structure.
-    (The map contains multiple polygons).
+    Adds a list of Polygons to the point locator
     '''
-    def add_polygon(self, poly : PointLocatorPoly):
+    def add_polygons(self, polygons):
+        polygons = [PointLocatorPoly(p) for p in polygons]
+        self.polygons = polygons
+        num_polygons = len(polygons)
 
-        self.polygons.append(poly)
+        with ThreadPool(constants.NUM_THREADS) as p:
+            self.search_structures = list(tqdm(p.imap(create_search_structure, self.polygons),total=num_polygons))
 
-        if len(poly.triangles) > constants.LINEAR_SEARCH_MAX_TRIANGLES:
-            # Use Kirkpatrick structure (O(nlogn) construction, O(logn) query)
-            self.search_structures.append(KirkpatrickPointLocator(poly))
-        else:
-            # Use linear point locator (O(n) construction, O(n) query)
-            self.search_structures.append(LinearPointLocator(poly))
 
+    '''
+    Finds the polygon id and the triangle where the
+    point is located.
+    Returns a tuple (polygon_id,triangle_id) if the point
+    is found inside some polygon or None otherwise
+    '''
     def locate(self, point: Point):
 
         for i,s in enumerate(self.search_structures):
@@ -181,24 +204,25 @@ class PointLocator:
         return None
 
 
-    # pid is the polygon id and
-    # sid1 and sid2 are the triangle ids between
-    # which we want to find a path
+
+    '''
+    `pid` is the polygon id and `sid1` and `sid2` are the ids
+    of the triangles of the polygon between which we want
+    to find a path.
+    '''
     def find_edge_path(self,pid,sid1,sid2):
 
         poly = self.polygons[pid]
-        struct = self.search_structures[pid]
 
         triangle_path = poly.dual_graph.find_path_between_nodes(sid1,sid2)
 
-
-        #plot(poly.triangles,'b-')
 
         for t in triangle_path:
 
             trig = poly.triangles[t]
 
-            #plot(trig,'b')
+            if self.visualize_triang_path:
+                plot(trig,'b')
 
         if not triangle_path or len(triangle_path) < 2:
             return []
@@ -209,9 +233,7 @@ class PointLocator:
             eb = poly.get_triangle_edges(b)
 
             e = list(set(ea) & set(eb))
-            # plt.plot([dg.P[e[0]][0],dg.P[e[1]][0]], [dg.P[e[0]][1],dg.P[e[1]][1]],'r-')
             path_edges.append(e)
-
 
 
         return path_edges
@@ -219,7 +241,8 @@ class PointLocator:
 '''
 The kirkpatrick point locator is very efficient
 for larger polygons and can answer point
-location queries in O(logn)
+location queries in O(logn). 
+However, it is time-consuming to build
 '''
 class KirkpatrickPointLocator:
 

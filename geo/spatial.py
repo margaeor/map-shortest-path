@@ -1,10 +1,6 @@
 import numpy as np
 import scipy.spatial as sp
-from triangulator import earcut
-from  matplotlib import tri as mtri
-from copy import deepcopy
-#from p2t import CDT
-
+from triangulation.earcut import earcut
 
 from . import shapes as shapes
 
