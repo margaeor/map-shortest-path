@@ -20,6 +20,7 @@ class Point(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.hash = hash((self.x, self.y))
 
     def __str__(self):
         return "(" + str(self.x) + ", " + str(self.y) + ")"
@@ -30,7 +31,7 @@ class Point(object):
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
-        return hash((self.x, self.y))
+        return self.hash
 
     def __add__(self, other):
         return Point(self.x + other.x, self.y + other.y)
