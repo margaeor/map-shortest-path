@@ -1,0 +1,4 @@
+pyshp
+matplotlib
+scipy
+tqdm

@@ -1,7 +1,22 @@
-from geo import shapes, spatial
-import min_triangle
-from graph import UndirectedGraph, DirectedGraph
+from functools import reduce
 
+import matplotlib.pyplot as plt
+from kirkpatrick.geo import shapes, spatial
+
+from kirkpatrick import min_triangle
+from kirkpatrick.geo.graph import UndirectedGraph, DirectedGraph
+
+
+def plot_triangles(triangles):
+    #plt.figure()
+    for t in triangles:
+
+        x = [t.points[0].x,t.points[1].x,t.points[2].x,t.points[0].x]
+        y = [t.points[0].y, t.points[1].y, t.points[2].y,t.points[0].y]
+
+        plt.plot(x, y)
+
+    plt.show()
 
 class Locator(object):
 
@@ -35,6 +50,8 @@ class Locator(object):
                 bounding_tri = min_triangle.boundingTriangle(poly.points)
                 bounding_regions = spatial.triangulatePolygon(
                     bounding_tri, hole=poly.points)
+
+                #plot_triangles(bounding_regions)
                 return bounding_tri, bounding_regions
 
             if not outline:
@@ -107,7 +124,8 @@ class Locator(object):
 
             # Avoid adding points from outer triangle
             removal = g.independent_set(8, avoid=bounding_triangle.points)
-
+            #rms = [len(points_to_regions[r]) for r in removal]
+            #print(rms)
             # Track unaffected regions
             unaffected_regions = set([i for i in range(len(regions))])
             new_regions = []

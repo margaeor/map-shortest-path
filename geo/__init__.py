@@ -1,1 +1,0 @@
-#!/usr/bin/env pythonimport geo.shapesimport geo.spatialimport random
