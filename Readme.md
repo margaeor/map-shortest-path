@@ -16,7 +16,7 @@ Then, when the user clicks on 2 points on the map, the process followed is:
    between our points given the triangle path.
 
 # Running
-In order to run the project, navigate to the root directory of the project and install the requirements as:
+In order to run the project, navigate to the root directory of the repo and install the requirements as:
 ```
 pip3 install -r requirements.txt
 ```
@@ -25,14 +25,16 @@ Then, launch the file `main.py` as:
 ```
 python3 main.py
 ```
-After you choose a map 2 load, wait for preprocessing to finish and for the map to appear.
-When the map appears, you can click at any points (not in the sea) to find the shortest polyline between them.
+After you choose a map to load, wait for preprocessing to finish and for the map to appear.
+When the map appears, you can click at any points (not in the sea) to find the shortest polyline between them, as shown in the figure below.
+
+![Alt text](figs/map.png?raw=true "Title")
 
 # Configuration
 You can adjust the project configuration by editing the file `constants.py`. There you can adjust the number of threads, the maximum number of polygons that are shown, turn on and off the triangle path visualization and determine the threshold above which we use Kirkpatrick point location instead of Exhaustive point location.
 
 # Acknowledgements
-Apart from the classic python libraries used (e.g. numpy,matplotlib, scipy...), I also incorporated the following repositories into the project using appropriate modifications:
+Apart from the classic python libraries used (e.g. numpy,matplotlib, scipy...), I also used and modified the following repositories for the project:
 
-- [mapbox/earcut](https://github.com/mapbox/earcut) as a very fast javascript polygon triangulation library, which I converted to python.
-- 
+- [mapbox/earcut](https://github.com/mapbox/earcut) as a very fast javascript polygon triangulation library, which I converted to python and used as the core triangulator.
+- [crm416/point-location](https://github.com/crm416/point-location) as an implementation of the Kirkpatrick triangulation point location in python.
