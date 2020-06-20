@@ -1,110 +1,14 @@
-import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
 import shapefile
+import time
 import constants
+import sys
 from geo.drawer import plot, plotPoints, show, showPoints
 from geo.shapes import Point, Polygon, Triangle
 from point_location.kirkpatrick import Locator
 from point_location.point_locator import PointLocator, PointLocatorPoly
 from tqdm import tqdm
-
-def ccw(A, B, C):
-    """Tests whether the line formed by A, B, and C is ccw"""
-    return (B.x - A.x) * (C.y - A.y) < (B.y - A.y) * (C.x - A.x)
-
-class PathFinder:
-    def __init__(self):
-        pass
-
-    def find_path_funnel(self, point_dict , edge_path, p, q):
-
-        tail = [p]
-        left = []
-        right = []
-
-        last_edge_l = None
-        last_edge_r = None
-
-        for i,e in enumerate(edge_path):
-            p1, p2 = point_dict[e[0]], point_dict[e[1]]
-
-
-            if p2 == last_edge_l or p1 == last_edge_r or (last_edge_r is None and last_edge_l is None and ccw(tail[-1], p2, p1)):
-                p1, p2 = p2, p1
-
-
-            if len(left) == 0 and p1 != tail[-1]: #or (left[-1] == tail[-1]):
-                # If appex is the same as previous left, then add the current point
-                left = [p1]
-            elif len(left) > 0 and left[-1] != p1:
-
-                if not ccw(tail[-1], p1, left[-1]):
-
-                    last_collision = -1
-                    for i,p in enumerate(right):
-                        if ccw(tail[-1], p, p1):
-                            # Point of right segment is left of point of left segment(violation).
-                            # So, add violating vertices to tail
-                            tail.append(right[i])
-                            last_collision = i
-
-                    if last_collision >= 0:
-                        # Collision with one or more previous right points when narrowing funnel
-                        left = [p1]
-                        right = right[last_collision + 1:]
-                    else:
-                        # No collisions so we just narrow the funnel
-                        left[-1] = p1
-                else:
-                    # New point opens the funnel and doesn't narrow it.
-                    # so append it
-                    left.append(p1)
-
-
-            if len(right) == 0 and p2 != tail[-1]:
-                # If appex is the same as previous right, then add the current point
-                right = [p2]
-            elif len(right) > 0 and right[-1] != p2:
-
-                if not ccw(tail[-1], right[-1], p2):
-
-                    last_collision = -1
-                    for i,p in enumerate(left):
-                        if ccw(tail[-1], p2, p):
-                            # Point of right segment is left of point of left segment(violation)
-                            # So, add violating vertices to tail
-                            tail.append(left[i])
-                            last_collision = i
-
-                    if last_collision >= 0:
-                        # Collision with one or more previous left points when narrowing funnel
-                        right = [p2]
-                        left = left[last_collision + 1:]
-                    else:
-                        # No collisions so we just narrow the funnel
-                        right[-1] = p2
-                else:
-                    # New point opens the funnel and doesn't narrow it.
-                    # so append it
-                    right.append(p2)
-
-
-            last_edge_l = p1
-            last_edge_r = p2
-
-        apex = tail[-1]
-        # Fix last collisions
-        for i, p in enumerate(right):
-            if ccw(apex, p, q):
-                tail.append(right[i])
-
-        for i,p in enumerate(left):
-            if ccw(apex, q, p):
-                tail.append(left[i])
-        tail.append(q)
-        return tail
-
+from pathfinder.pathfinder import PathFinder
 
 
 class ClickEvent():
@@ -132,8 +36,6 @@ class ClickEvent():
         self.press=False; self.move=False
 
 
-
-
 class ProgramDriver:
 
     def __init__(self, shape_file="./data/h/GSHHS_h_L1.shp"):
@@ -150,7 +52,7 @@ class ProgramDriver:
 
 
         with shapefile.Reader(shape_file) as shp:
-            shapes = shp.shapes()
+            shapes = sorted(shp.shapes(),key=lambda x:-len(x.points))
 
         num_points = sum([len(poly.points) for poly in shapes])
 
@@ -160,7 +62,7 @@ class ProgramDriver:
         print(f"\nNumber of points in file: {num_points}",end='')
         print(f"\nPoints of largest polygon: {len(self.polygons[-1])}")
         print("Processing map")
-        for i,p in enumerate(tqdm(self.polygons)):
+        for i,p in enumerate(tqdm(self.polygons,file=sys.stdout)):
 
             self.point_locator.add_polygon(PointLocatorPoly(p))
 
@@ -172,7 +74,11 @@ class ProgramDriver:
         #      (event.button, event.x, event.y, event.xdata, event.ydata))
 
         p = Point(event.xdata,event.ydata)
+        tic = time.perf_counter()
         l = self.point_locator.locate(p)
+        toc = time.perf_counter()
+        print(f"Point location took {toc - tic:0.4f} seconds")
+
 
 
         if l is None:
@@ -227,20 +133,23 @@ class ProgramDriver:
 
 
 
-#driver = ProgramDriver("./data/l/GSHHS_l_L1.shp")
+#driver = ProgramDriver("./data/GSHHS_h_L1.shp")
 #driver.show_map()
+
+
 
 if __name__ == '__main__':
 
-    choices = ['c','l','h','i']
+    choices = ['c','l','i','h']
     files = [str("GSHHS_"+c+"_L1.shp") for i,c in enumerate(choices)]
-    choice = '0'
+
     while True:
         print("Choose map shapefile:")
         print("1) File (c) with 802 polygons, 7721 points")
         print("2) File (l) with 5812 polygons, 57912 points")
-        print("3) File (h) with 145483 polygons, 1643797 points")
-        print("4) File (i) with 33447 polygons, 347247 points")
+        print("3) File (i) with 33447 polygons, 347247 points")
+        print("4) File (h) with 145483 polygons, 1643797 points")
+
 
         choice = input("Please make a choice: ")
 
