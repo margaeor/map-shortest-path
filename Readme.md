@@ -28,7 +28,7 @@ python3 main.py
 After you choose a map to load, wait for preprocessing to finish and for the map to appear.
 When the map appears, you can click at any points (not in the sea) to find the shortest polyline between them, as shown in the figure below.
 
-![Alt text](figs/map.png?raw=true "Title")
+![Program in Action](figs/map.png?raw=true "Shortest Polyline")
 
 # Configuration
 You can adjust the project configuration by editing the file `constants.py`. There you can adjust the number of threads, the maximum number of polygons that are shown, turn on and off the triangle path visualization and determine the threshold above which we use Kirkpatrick point location instead of Exhaustive point location.
