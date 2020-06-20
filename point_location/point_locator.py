@@ -1,109 +1,29 @@
-import shapefile
-import tripy
-import json
-import numpy as np
-from geo.shapes import Point, Polygon, Triangle
-from geo.spatial import triangulatePolygon
-from geo.generator import randomConvexPolygon, randomConcaveTiling
-from geo.drawer import plot, plotPoints, show, showPoints
-from graph import DirectedGraph, UndirectedGraph
-from kirkpatrick import Locator
-import matplotlib.pyplot as plt
-import constants
-from collections import defaultdict,deque
+
+from collections import defaultdict, deque
 from itertools import combinations
+from multiprocessing import Pool as ThreadPool
 
-from triangulator import earcut
+from kirkpatrick.geo.drawer import plot
+from kirkpatrick.geo.shapes import Point, Polygon, Triangle
+from tqdm import tqdm
 
+import constants
+from kirkpatrick.geo.graph import UndirectedGraph
+from kirkpatrick.kirkpatrick import Locator
+from triangulation.earcut import earcut
 
-with shapefile.Reader("./GSHHS_c_L1.shp") as shp:
-    shapes = shp.shapes()
+'''
+Creates a point location search structure
+for a specific polygon
+'''
+def create_search_structure( poly):
+    if len(poly.triangles) > constants.LINEAR_SEARCH_MAX_TRIANGLES:
+        # Use Kirkpatrick structure (high construction complexity, O(logn) query)
+        return KirkpatrickPointLocator(poly)
+    else:
+        # Use linear point locator (O(n) construction, O(n) query)
+        return LinearPointLocator(poly)
 
-polygons = [shape.points for shape in shapes]
-
-t = []
-flattened = []
-
-ANIMATE = True
-
-
-
-def runLocator(regions,outline,point_to_id):
-    # Pre-process regions
-    l = Locator(regions,outline=outline)
-
-    if ANIMATE:
-       show(regions)
-       plot(l.boundary, style='g--')
-       show(regions)
-
-
-    n = 50
-    # Ensure correctness
-    for region in reversed(regions):
-        # Test n random interior points per region
-        for k in range(n):
-            target = region.smartInteriorPoint()
-            print(target)
-            target_region = l.locate(target)
-
-        # Animate one interior point
-        if ANIMATE:
-            plot(l.regions)
-            plot(target_region, style='ro-')
-            showPoints(target, style='bo')
-
-        # Test n random exterior points per region
-        for k in range(n):
-            target = region.exteriorPoint()
-            target_region, is_valid = l.annotatedLocate(target)
-
-
-        # Animate one exterior point
-        if ANIMATE and target_region:
-            plot(l.regions)
-            plot(target_region, style='ro--')
-            showPoints(target, style='bx')
-
-
-def create_kirkpatrick(point_dict,triangulation):
-
-    converted_points = [Point(p[0],p[1]) for p in point_dict]
-    point_to_id = {Point(p[0],p[1]):i for i,p in enumerate(point_dict)}
-    triangulation = [Point(*point_dict[t]) for t in triangulation]
-
-    triangles = [Triangle(*[triangulation[i+j] for j in range(3)])
-                for i in range(0,len(triangulation),3)]
-
-    plt.figure()
-
-    x = []
-    y = []
-
-    for p in point_dict:
-
-        x.append(p[0])
-        y.append(p[1])
-
-    x.append(point_dict[0][0])
-    y.append(point_dict[0][1])
-    x = np.array(x)
-    y = np.array(y)
-    plt.plot(x, y)
-
-    lst = []
-
-    for t in triangles:
-
-        x = [t.points[0].x,t.points[1].x,t.points[2].x,t.points[0].x]
-        y = [t.points[0].y, t.points[1].y, t.points[2].y,t.points[0].y]
-
-        lst.append([[t.points[0].x,t.points[0].y],[t.points[1].x,t.points[1].y],[t.points[2].x,t.points[2].y]])
-        #plt.plot(x, y)
-
-    outline = Polygon(converted_points)
-    #plt.show()
-    runLocator(triangles,outline,point_to_id)
 
 
 class DualGraph:
@@ -196,7 +116,7 @@ class PointLocatorPoly:
 
         flattened_points = []
 
-        # Flatten points to pass them to triangulator
+        # Flatten points to pass them to triangulation
         for point in points:
             flattened_points.append(point[0])
             flattened_points.append(point[1])
@@ -236,21 +156,21 @@ class PointLocatorPoly:
         else:
             return None
 
-    # def id_to_point(self,id):
-    #
-    #     if  id>=0 and id<len(self.points):
-    #         return self.points[id]
-    #     else:
-    #         return -1
 
+    def get_triangle_edges(self,tid):
+        return tuple(sorted(list(self.id_triangles[tid])))
 
 
 class PointLocator:
 
-    def __init__(self):
+    def __init__(self, visualize_triang_path=False):
 
         # List of different polygons
         self.polygons = []
+
+        # Parameter of whether we want to visualize
+        # the triangles that the pathfinder passes from
+        self.visualize_triang_path = visualize_triang_path
 
         # List of structures that will answer
         # point location queries (each search
@@ -258,20 +178,23 @@ class PointLocator:
         self.search_structures = []
 
     '''
-    Adds a new polygon to the search structure.
-    (The map contains multiple polygons).
+    Adds a list of Polygons to the point locator
     '''
-    def add_polygon(self, poly : PointLocatorPoly):
+    def add_polygons(self, polygons):
+        polygons = [PointLocatorPoly(p) for p in polygons]
+        self.polygons = polygons
+        num_polygons = len(polygons)
 
-        self.polygons.append(poly)
+        with ThreadPool(constants.NUM_THREADS) as p:
+            self.search_structures = list(tqdm(p.imap(create_search_structure, self.polygons),total=num_polygons))
 
-        if len(poly.triangles) > constants.LINEAR_SEARCH_MAX_TRIANGLES:
-            # Use Kirkpatrick structure (O(nlogn) construction, O(logn) query)
-            self.search_structures.append(KirkpatrickPointLocator(poly))
-        else:
-            # Use linear point locator (O(n) construction, O(n) query)
-            self.search_structures.append(LinearPointLocator(poly))
 
+    '''
+    Finds the polygon id and the triangle where the
+    point is located.
+    Returns a tuple (polygon_id,triangle_id) if the point
+    is found inside some polygon or None otherwise
+    '''
     def locate(self, point: Point):
 
         for i,s in enumerate(self.search_structures):
@@ -281,33 +204,46 @@ class PointLocator:
 
         return None
 
-    def click_event(self,event):
-
-        print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-              (event.button, event.x, event.y, event.xdata, event.ydata))
-
-        p = Point(event.xdata,event.ydata)
-        l = self.locate(p)
-        print(l)
-        plt.plot(event.xdata, event.ydata,markerfacecolor="red", marker=".", markersize=20)
-        self.fig.canvas.draw()
-
-    def start_gui(self):
-
-        self.fig = plt.figure()
-        plot(self.polygons)
-
-        #show(self.polygons[0].triangles)
-
-        cid = self.fig.canvas.mpl_connect('button_press_event', self.click_event)
-        plt.show()
 
 
+    '''
+    `pid` is the polygon id and `sid1` and `sid2` are the ids
+    of the triangles of the polygon between which we want
+    to find a path.
+    '''
+    def find_edge_path(self,pid,sid1,sid2):
+
+        poly = self.polygons[pid]
+
+        triangle_path = poly.dual_graph.find_path_between_nodes(sid1,sid2)
+
+
+        for t in triangle_path:
+
+            trig = poly.triangles[t]
+
+            if self.visualize_triang_path:
+                plot(trig,'b')
+
+        if not triangle_path or len(triangle_path) < 2:
+            return []
+
+        path_edges = []
+        for a, b in zip(triangle_path[:-1], triangle_path[1:]):
+            ea = poly.get_triangle_edges(a)
+            eb = poly.get_triangle_edges(b)
+
+            e = list(set(ea) & set(eb))
+            path_edges.append(e)
+
+
+        return path_edges
 
 '''
 The kirkpatrick point locator is very efficient
 for larger polygons and can answer point
-location queries in O(logn)
+location queries in O(logn). 
+However, it is time-consuming to build
 '''
 class KirkpatrickPointLocator:
 
@@ -347,42 +283,3 @@ class LinearPointLocator:
             if t.contains(point):
                 return i
         return None
-
-
-
-rp = polygons
-
-point_locator = PointLocator()
-
-for i,p in enumerate(rp):
-
-    point_locator.add_polygon(PointLocatorPoly(p))
-
-
-
-    # flattened_point  = []
-    #
-    # for point in p:
-    #     flattened_point.append(point[0])
-    #     flattened_point.append(point[1])
-    #
-    # #flattened_point = list(reversed(flattened_point))
-    #
-    # flattened.append(flattened_point)
-    #
-    # trig = earcut(flattened_point)
-    #
-    # create_kirkpatrick(p, trig)
-    # #create_kirkpatrick(idxes,idxes2_out)
-    #
-    # t.append(trig)
-    # print(f"Finished {i}")
-
-
-
-point_locator.start_gui()
-
-
-# with open('data.json', 'w') as outfile:
-#     json.dump(flattened, outfile)
-

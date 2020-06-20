@@ -1,0 +1,1 @@
+#!/usr/bin/env pythonimport kirkpatrick.geo.shapes

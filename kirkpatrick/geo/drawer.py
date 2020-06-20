@@ -1,5 +1,6 @@
-import spatial
 import matplotlib.pyplot as plt
+
+from . import spatial
 
 
 def plotPoints(points, style='bo'):

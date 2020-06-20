@@ -1,7 +1,7 @@
-from random import random
 from math import sqrt
-import geo.spatial as spatial
-from geo.drawer import *
+from random import random
+
+from kirkpatrick import geo as spatial
 
 
 def ccw(A, B, C):
@@ -20,21 +20,27 @@ class Point(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.hash = hash((self.x, self.y))
 
     def __str__(self):
         return "(" + str(self.x) + ", " + str(self.y) + ")"
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
-        return hash((self.x, self.y))
+        return self.hash
 
     def __add__(self, other):
         return Point(self.x + other.x, self.y + other.y)
 
     def __rmul__(self, c):
         return Point(c * self.x, c * self.y)
+
+    def __truediv__(self, c):
+        return Point(self.x/c,self.y/c)
 
     def close(self, that, epsilon=0.01):
         return self.dist(that) < epsilon
@@ -125,6 +131,7 @@ class Polygon(object):
 
         self.points = points
         self.n = len(points)
+        self.hash = hash(tuple(sorted(self.points, key=lambda p: p.x)))
 
     def __str__(self):
         s = ""
@@ -135,7 +142,7 @@ class Polygon(object):
         return s
 
     def __hash__(self):
-        return hash(tuple(sorted(self.points, key=lambda p: p.x)))
+        return self.hash
 
     def contains(self, p):
         """Returns True if p is inside self."""
@@ -332,6 +339,7 @@ class Triangle(Polygon):
     def __init__(self, A, B, C):
         self.points = [A, B, C]
         self.n = 3
+        self.hash = hash(tuple(sorted(self.points, key=lambda p: p.x)))
 
     def area(self):
         A = self.points[0]
