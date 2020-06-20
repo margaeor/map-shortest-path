@@ -1,4 +1,5 @@
 data.json
+data_out.json
 *.shp
 *.pyc
 data
