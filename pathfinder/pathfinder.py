@@ -6,6 +6,9 @@ class PathFinder:
     def __init__(self):
         pass
 
+    '''
+    Implementation of the funnel algorithm for path finding
+    '''
     def find_path_funnel(self, point_dict , edge_path, p, q):
 
         tail = [p]

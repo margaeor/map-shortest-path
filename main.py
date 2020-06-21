@@ -150,10 +150,12 @@ if __name__ == '__main__':
 
         try:
             choice = int(choice)
-
-            if choice >=1 and choice <=5:
-                driver = ProgramDriver("./data/"+files[choice-1])
-                driver.show_map()
-
         except ValueError as e:
             print("Wrong input")
+            continue
+
+        if choice >=1 and choice <=5:
+            driver = ProgramDriver("./data/"+files[choice-1])
+            driver.show_map()
+
+

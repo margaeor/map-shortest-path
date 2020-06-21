@@ -28,10 +28,41 @@ python3 main.py
 After you choose a map to load, wait for preprocessing to finish and for the map to appear.
 When the map appears, you can click at any points (not in the sea) to find the shortest polyline between them, as shown in the figure below.
 
-![Program in Action](figs/map.png?raw=true "Shortest Polyline")
+![Program in Action](./figs/map.png?raw=true "Shortest Polyline")
 
 # Configuration
 You can adjust the project configuration by editing the file `constants.py`. There you can adjust the number of threads, the maximum number of polygons that are shown, turn on and off the triangle path visualization and determine the threshold above which we use Kirkpatrick point location instead of Exhaustive point location.
+
+# Performance
+To estimate the overall performance, I measured the time taken to perform preprocessing
+and point location on the different data files.
+The data files that were used come from the [GSHHS dataset]([GSHHS](http://www.earthmodels.org/data-and-tools/coastlines/gshhs)) and discribe earth shorelines using polygons. 
+The size of the different files used is described in the table below:
+
+| File | Total polygons | Total Points | Max polygon points |
+|------|----------------|--------------|--------------------|
+| (c)  | 802            | 7721         | 1000               |
+| (l)  | 5812           | 57912        | 6730               |
+| (i)  | 33447          | 347247       | 34329              |
+| (h)  | 145483         | 1643797      | 139789             |
+
+## Preprocessing
+In the table below, we can see the approximate time taken for preprocessing of the different files for various thread pool sizes.
+The results are shown in `seconds`.
+| Threads | File (c) | File (l) | File (i) | File (h) |
+|---------|----------|----------|----------|----------|
+|    1    |   1.3 s  |   7.6 s  |   49 s   |   233 s  |
+|    2    |  1.08 s  |   5.3 s  |   31 s   |   161 s  |
+|    4    |   1.3 s  |   4.8 s  |   29 s   |   140 s  |
+|    8    |   1.3 s  |   4.8 s  |   24 s   |   125 s  |
+
+## Point Location
+In the table below we can see the time taken for point
+location of a single point in the different files:
+
+| File (c)   | File (l)  | File (i)  | File (h) |
+|------------|-----------|-----------|----------|
+|   0.015 s  |   0.08 s  |   0.3 s   |   1 s    |
 
 # Acknowledgements
 Apart from the classic python libraries used (e.g. numpy,matplotlib, scipy...), I also used and modified the following repositories for the project:

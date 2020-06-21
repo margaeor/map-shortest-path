@@ -25,6 +25,15 @@ def create_search_structure( poly):
         return LinearPointLocator(poly)
 
 
+# class ParallelPointLocator:
+#
+#     def __call__(self, *args, **kwargs):
+#
+#         return args[0].locate(args[1])
+
+def parallel_locate(search_structure,point):
+    return search_structure.locate(point)
+
 
 class DualGraph:
 
@@ -196,6 +205,20 @@ class PointLocator:
     is found inside some polygon or None otherwise
     '''
     def locate(self, point: Point):
+
+        # THREADS = constants.NUM_THREADS
+        #
+        # CHUNK_SIZE = 1000
+        #
+        # with ThreadPool(THREADS) as p:
+        #     for i in range(0,len(self.search_structures),CHUNK_SIZE):
+        #         args = [(s,point) for s in self.search_structures[i:i+CHUNK_SIZE]]
+        #         partial_res = p.starmap(parallel_locate,args)
+        #
+        #         for j,l in enumerate(partial_res):
+        #             if l is not None:
+        #                 return (i+j, l)
+
 
         for i,s in enumerate(self.search_structures):
             l = s.locate(point)
